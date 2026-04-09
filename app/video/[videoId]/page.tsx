@@ -13,7 +13,7 @@ export default function VideoCommentsPage() {
   const params = useParams();
   const videoId = params.videoId as string;
   const { user } = useAuth();
-  const { videos, comments } = useData();
+  const { videos, comments, donations } = useData();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -40,6 +40,11 @@ export default function VideoCommentsPage() {
   const threadComments = comments
     .filter((c) => c.videoId === video.id)
     .sort((left, right) => new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime());
+
+  const donationAmountById = donations.reduce<Record<string, number>>((accumulator, donation) => {
+    accumulator[donation.id] = donation.amount;
+    return accumulator;
+  }, {});
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -90,25 +95,52 @@ export default function VideoCommentsPage() {
             </div>
           ) : (
             threadComments.map((comment) => (
-              <div key={comment.id} className="bg-white border border-slate-200 rounded-xl p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1">
-                    <p className="text-xs text-slate-500 mb-1">{comment.authorName}</p>
-                    <p className="text-sm text-slate-800">{comment.text}</p>
+              <div key={comment.id} className="rounded-2xl border border-slate-200 bg-slate-50/40 p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <p className="text-2xl leading-none text-slate-300 select-none" aria-hidden="true">&ldquo;</p>
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center justify-between gap-3">
+                      <p className="truncate pr-2 text-sm font-medium text-slate-700">{comment.authorName}</p>
+                      <span className="inline-flex shrink-0 items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                        Given ${((donationAmountById[comment.donationId] ?? 0)).toFixed(2)}
+                      </span>
+                    </div>
+                    <p className="mb-3 text-xs text-slate-400">
+                      {new Date(comment.timestamp).toLocaleDateString()}
+                    </p>
+                    <p className="text-base leading-relaxed text-slate-900">{comment.text}</p>
                   </div>
-                  <p className="text-[11px] text-slate-400 whitespace-nowrap">
-                    {new Date(comment.timestamp).toLocaleDateString()}
-                  </p>
                 </div>
 
                 {comment.replies && comment.replies.length > 0 && (
-                  <div className="mt-3 space-y-2 pl-3 border-l-2 border-slate-200">
-                    {comment.replies.map((reply) => (
-                      <div key={reply.id} className="pl-2">
-                        <p className="text-xs text-slate-500 mb-1">{reply.authorName}</p>
-                        <p className="text-sm text-slate-700">{reply.text}</p>
-                      </div>
-                    ))}
+                  <div className="mt-4 space-y-2 pl-5 border-l-2 border-slate-200">
+                    {comment.replies.map((reply) => {
+                      const isOwnerReply = reply.authorId === video.creatorId;
+                      const replyAuthorName = isOwnerReply ? video.creatorName : reply.authorName;
+
+                      return (
+                        <div
+                          key={reply.id}
+                          className={`rounded-xl border p-4 ${
+                            isOwnerReply
+                              ? 'border-blue-200 bg-blue-50'
+                              : 'border-slate-200 bg-white'
+                          }`}
+                        >
+                          <div className="mb-2 flex items-center justify-between gap-3">
+                            <p className={`text-sm font-semibold ${isOwnerReply ? 'text-blue-700' : 'text-slate-700'}`}>
+                              {replyAuthorName}
+                            </p>
+                            <p className="text-xs text-slate-400 whitespace-nowrap">
+                              {new Date(reply.timestamp).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <p className={`text-sm leading-relaxed ${isOwnerReply ? 'text-blue-900' : 'text-slate-800'}`}>
+                            {reply.text}
+                          </p>
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
