@@ -44,7 +44,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-white to-slate-50 flex flex-col">
+    <div className="min-h-screen bg-linear-to-b from-white to-slate-50 flex flex-col">
       {/* Header */}
       <div className="bg-white border-b border-slate-200 px-4 py-6">
         <div className="max-w-md mx-auto">
@@ -94,7 +94,7 @@ export default function LoginPage() {
 
             {error && (
               <div className="flex gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
@@ -115,6 +115,7 @@ export default function LoginPage() {
               {demoAccounts.map((account) => (
                 <button
                   key={account.email}
+                  suppressHydrationWarning
                   onClick={() => fillCredentials(account.email, account.password)}
                   className="text-left p-3 rounded-lg border border-slate-200 hover:border-primary hover:bg-primary/5 transition"
                 >

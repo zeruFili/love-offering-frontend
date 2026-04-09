@@ -250,7 +250,7 @@ export default function DashboardPage() {
                             <p className="text-xs text-slate-500 mt-1">Duration: {video.duration}</p>
                             <p className="text-xs text-slate-500 mt-1">Status: {video.status}</p>
                             <div className="mt-2">
-                              <Link href={`/contributors?videoId=${video.id}`} className="text-xs font-medium text-primary hover:underline">
+                              <Link href="/contributors" className="text-xs font-medium text-primary hover:underline">
                                 Manage Contributors
                               </Link>
                             </div>

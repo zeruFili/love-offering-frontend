@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import Script from 'next/script'
 import { AuthProvider } from '@/lib/auth-context'
 import { DataProvider } from '@/lib/data-context'
 import { Toaster } from '@/components/ui/sonner'
@@ -48,12 +49,12 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script src="https://telegram.org/js/telegram-web-app.js?59"></script>
+        <Script src="https://telegram.org/js/telegram-web-app.js?59" strategy="beforeInteractive" />
       </head>
       <body className="font-sans antialiased bg-background text-foreground">
-        <script>{`
+        <Script id="telegram-webapp-ready" strategy="afterInteractive">{`
           window.Telegram?.WebApp?.ready?.();
-        `}</script>
+        `}</Script>
         <AuthProvider>
           <DataProvider>
             {children}
