@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useData } from '@/lib/data-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Mail, LogOut, Settings, BarChart3, Heart, Shield, Gift, Menu, Search, Compass, Radio, History, User } from 'lucide-react';
+import { Mail, LogOut, Settings, BarChart3, Heart, Shield, Gift, Menu, Search, Compass, Radio, History, User, Upload, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
@@ -82,6 +82,7 @@ export default function Home() {
 
   if (!mounted) return null;
   if (!user) return null;
+  const canManageCreatorVideos = user.role !== 'donor' && ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user.role);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -144,8 +145,8 @@ export default function Home() {
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Support the creators and ministries you love</h2>
 
-          {user.role !== 'donor' && (
-            <div className="mt-4">
+          <div className="mt-4">
+            {user.role !== 'donor' ? (
               <button
                 onClick={() => setShowMyVideos((previous) => !previous)}
                 className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
@@ -156,8 +157,16 @@ export default function Home() {
               >
                 {showMyVideos ? 'All Videos' : 'My Videos'}
               </button>
-            </div>
-          )}
+            ) : (
+              <Link
+                href="/verify/role-selection"
+                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border border-amber-300 bg-amber-50 text-amber-800 hover:bg-amber-100 transition"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Get Verified</span>
+              </Link>
+            )}
+          </div>
         </div>
 
         <div className="max-w-md md:max-w-3xl lg:max-w-6xl mx-auto w-full">
@@ -254,13 +263,27 @@ export default function Home() {
                 <Settings className="w-5 h-5" />
                 <span>Settings</span>
               </Link>
-              <button
-                onClick={() => setShowMyVideos((previous) => !previous)}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition"
-              >
-                <History className="w-5 h-5" />
-                <span>{showMyVideos ? 'All Videos' : 'My Videos'}</span>
-              </button>
+              {canManageCreatorVideos && (
+                <>
+                  <button
+                    onClick={() => setShowMyVideos((previous) => !previous)}
+                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition"
+                  >
+                    <History className="w-5 h-5" />
+                    <span>{showMyVideos ? 'All Videos' : 'My Videos'}</span>
+                  </button>
+                  <Link href="/upload" className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition">
+                    <Upload className="w-5 h-5" />
+                    <span>Upload Video</span>
+                  </Link>
+                </>
+              )}
+              {user.role === 'donor' && (
+                <Link href="/verify/role-selection" className="flex items-center gap-3 px-3 py-2 rounded-xl text-amber-700 bg-amber-50 hover:bg-amber-100 transition">
+                  <FileText className="w-5 h-5" />
+                  <span>Get Verified</span>
+                </Link>
+              )}
             </div>
           </aside>
 

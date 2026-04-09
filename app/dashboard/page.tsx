@@ -11,11 +11,12 @@ import Link from 'next/link';
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { getDonationsByDonor, getDonationsByCreator, getVideosByCreator } = useData();
+  const { getDonationsByDonor, getDonationsByCreator } = useData();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<'donations' | 'earnings' | 'videos' | 'settings'>('donations');
+  const [activeTab, setActiveTab] = useState<'donations' | 'earnings' | 'settings'>('donations');
   const isDonor = user?.role === 'donor';
   const isCreator = user ? ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user.role) : false;
+  const canSeeCreatorTabs = !isDonor && isCreator;
   const primaryTab: 'donations' | 'earnings' = isDonor ? 'donations' : 'earnings';
 
   useEffect(() => {
@@ -32,7 +33,6 @@ export default function DashboardPage() {
   if (!mounted || !user) return null;
 
   const donations = isDonor ? getDonationsByDonor(user.id) : getDonationsByCreator(user.id);
-  const myVideos = isCreator ? getVideosByCreator(user.id) : [];
   const totalAmount = donations.reduce((sum, d) => sum + d.amount, 0);
 
   return (
@@ -58,12 +58,11 @@ export default function DashboardPage() {
               <div className="flex gap-2 md:flex-col">
                 {[
                   { id: primaryTab, label: isDonor ? 'Supported' : 'Earnings' },
-                  isCreator ? { id: 'videos', label: 'My Videos' } : null,
-                  isCreator ? { id: 'settings', label: 'Bank Accounts' } : null,
+                  canSeeCreatorTabs ? { id: 'settings', label: 'Bank Accounts' } : null,
                 ].filter(Boolean).map((tab) => (
                   <button
                     key={tab!.id}
-                    onClick={() => setActiveTab(tab!.id as 'donations' | 'earnings' | 'videos' | 'settings')}
+                    onClick={() => setActiveTab(tab!.id as 'donations' | 'earnings' | 'settings')}
                     className={`flex-1 md:flex-none text-left px-3 py-2.5 rounded-lg text-sm font-medium transition ${
                       activeTab === tab!.id
                         ? 'bg-primary/10 text-primary'
@@ -73,6 +72,13 @@ export default function DashboardPage() {
                     {tab!.label}
                   </button>
                 ))}
+                {canSeeCreatorTabs && (
+                  <Link href="/upload" className="flex-1 md:flex-none">
+                    <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                      Upload Video
+                    </button>
+                  </Link>
+                )}
               </div>
             </div>
           </aside>
@@ -126,7 +132,7 @@ export default function DashboardPage() {
 
                 {/* Quick Actions */}
                 <div className="space-y-2 mb-6">
-                  {isCreator && user.verificationStatus === 'approved' && (
+                  {canSeeCreatorTabs && user.verificationStatus === 'approved' && (
                     <>
                       <Link href="/upload" className="block">
                         <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition text-left">
@@ -149,8 +155,8 @@ export default function DashboardPage() {
                     </>
                   )}
 
-                  {isCreator && user.verificationStatus !== 'approved' && (
-                    <Link href="/verify" className="block">
+                  {canSeeCreatorTabs && user.verificationStatus !== 'approved' && (
+                    <Link href="/verify/role-selection" className="block">
                       <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200 text-left">
                         <FileText className="w-5 h-5 text-amber-600" />
                         <div>
@@ -161,7 +167,7 @@ export default function DashboardPage() {
                     </Link>
                   )}
 
-                  {isCreator && (
+                  {canSeeCreatorTabs && (
                     <Link href="/bank-accounts" className="block">
                       <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition text-left">
                         <CreditCard className="w-5 h-5 text-primary" />
@@ -225,53 +231,8 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* My Videos Tab */}
-            {activeTab === 'videos' && isCreator && (
-              <div>
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-slate-900">My Videos</h2>
-                  <Link href="/upload">
-                    <Button className="bg-primary hover:bg-primary/90 text-white">Upload Video</Button>
-                  </Link>
-                </div>
-
-                {myVideos.length > 0 ? (
-                  <div className="space-y-3">
-                    {myVideos.map((video) => (
-                      <div key={video.id} className="bg-white rounded-xl border border-slate-200 p-4">
-                        <div className="flex gap-3">
-                          <img
-                            src={video.thumbnail}
-                            alt={video.title}
-                            className="w-20 h-14 rounded-md object-cover shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-slate-900 line-clamp-1">{video.title}</p>
-                            <p className="text-xs text-slate-500 mt-1">Duration: {video.duration}</p>
-                            <p className="text-xs text-slate-500 mt-1">Status: {video.status}</p>
-                            <div className="mt-2">
-                              <Link href="/contributors" className="text-xs font-medium text-primary hover:underline">
-                                Manage Contributors
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-slate-600 mb-4">You have not uploaded videos yet</p>
-                    <Link href="/upload">
-                      <Button className="bg-primary hover:bg-primary/90 text-white">Upload Your First Video</Button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Bank Accounts Tab */}
-            {activeTab === 'settings' && isCreator && (
+            {activeTab === 'settings' && canSeeCreatorTabs && (
               <div>
                 {user.bankAccounts.length > 0 ? (
                   <div className="space-y-3 mb-6">
