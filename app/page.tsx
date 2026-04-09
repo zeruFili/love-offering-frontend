@@ -166,7 +166,7 @@ export default function Home() {
             {filteredVideos.map((video) => (
               <div
                 key={video.id}
-                className="group bg-white rounded-xl border border-slate-200 overflow-hidden hover:border-primary hover:shadow-lg transition"
+                className="group bg-white rounded-xl border border-slate-200 overflow-hidden hover:border-primary hover:shadow-lg transition flex flex-col"
               >
                 <Link href={`/video/${video.id}`}>
                   <div className="aspect-video bg-slate-200 overflow-hidden relative">
@@ -186,14 +186,14 @@ export default function Home() {
                   </div>
                 </Link>
 
-                <div className="p-4">
+                <div className="p-4 flex flex-1 flex-col">
                   <Link href={`/video/${video.id}`} className="block">
                     <h3 className="font-semibold text-slate-900 line-clamp-2 group-hover:text-primary transition">
                       {video.title}
                     </h3>
                   </Link>
 
-                  <div className="mt-4 flex items-center justify-between gap-3">
+                  <div className="mt-auto pt-4 flex items-center justify-between gap-3">
                     <Link href={`/video/${video.id}`} className="min-w-0">
                       <p className="text-sm text-slate-600 flex items-center gap-2">
                         <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
@@ -283,7 +283,7 @@ export default function Home() {
 
             <div className="grid grid-cols-3 gap-5">
               {filteredVideos.map((video) => (
-                <article key={video.id} className="group">
+                <article key={video.id} className="group flex h-full flex-col">
                   <Link href={`/video/${video.id}`}>
                     <div className="aspect-video rounded-2xl overflow-hidden bg-slate-200">
                       <img
@@ -294,12 +294,12 @@ export default function Home() {
                     </div>
                   </Link>
 
-                  <div className="mt-3 flex items-start gap-3">
+                  <div className="mt-3 flex flex-1 items-start gap-3">
                     <div className="w-9 h-9 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0">
                       {video.creatorRole.charAt(0).toUpperCase()}
                     </div>
 
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1 flex flex-col">
                       <Link href={`/video/${video.id}`} className="block">
                         <h3 className="font-semibold text-slate-900 line-clamp-2 leading-snug group-hover:text-primary transition">
                           {video.title}
@@ -308,12 +308,10 @@ export default function Home() {
                       <p className="text-sm text-slate-600 mt-1 truncate">{video.creatorName}</p>
                       <div className="flex items-center gap-2 mt-2">
                         <span className="text-xs text-slate-500">{video.duration}</span>
-                        <span className="text-xs text-slate-400">•</span>
-                        <span className="text-xs text-slate-500 capitalize">{video.creatorRole}</span>
                       </div>
                     </div>
 
-                    <Link href={`/donate/${video.id}`} className="shrink-0">
+                    <Link href={`/donate/${video.id}`} className="shrink-0 self-start pt-1">
                       <Button
                         size="icon"
                         className="h-9 w-9 rounded-full bg-amber-500 hover:bg-amber-600 text-amber-950 shadow-sm"
