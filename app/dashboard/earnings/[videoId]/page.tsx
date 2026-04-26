@@ -5,15 +5,17 @@ import { useData } from '@/lib/data-context';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Heart, MessageCircle, DollarSign, Users } from 'lucide-react';
+import { ArrowLeft, Heart, MessageCircle, DollarSign, Users, Send, Reply as ReplyIcon } from 'lucide-react';
 
 export default function CreatorEarningsDetailPage() {
   const router = useRouter();
   const params = useParams();
   const videoId = params.videoId as string;
   const { user } = useAuth();
-  const { videos, comments } = useData();
+  const { videos, comments, addReply } = useData();
   const [mounted, setMounted] = useState(false);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [openReplyComposer, setOpenReplyComposer] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setMounted(true);
@@ -59,6 +61,22 @@ export default function CreatorEarningsDetailPage() {
 
   const totalReceived = videoComments.reduce((sum, comment) => sum + comment.amount, 0);
   const supporterCount = new Set(videoComments.map((comment) => comment.authorName)).size;
+
+  const handleSendReply = (commentId: string, donationId: string) => {
+    const draft = replyDrafts[commentId]?.trim();
+    if (!draft) return;
+
+    addReply(donationId, commentId, {
+      id: `reply-${commentId}-${Date.now()}`,
+      authorId: user.id,
+      authorName: user.name,
+      text: draft,
+      timestamp: new Date().toISOString(),
+    });
+
+    setReplyDrafts((previous) => ({ ...previous, [commentId]: '' }));
+    setOpenReplyComposer((previous) => ({ ...previous, [commentId]: false }));
+  };
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -113,8 +131,17 @@ export default function CreatorEarningsDetailPage() {
               <p className="text-slate-600">No comments or gifts for this video yet</p>
             </div>
           ) : (
-            videoComments.map((comment) => (
-              <div key={comment.id} className="bg-white border border-slate-200 rounded-xl p-4">
+            videoComments.map((comment) => {
+              const replied = comment.replies && comment.replies.length > 0;
+              const composerOpen = openReplyComposer[comment.id] ?? false;
+
+              return (
+              <div
+                key={comment.id}
+                className={`rounded-xl border p-4 transition ${
+                  replied ? 'bg-white border-emerald-200' : 'bg-white border-slate-200'
+                }`}
+              >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
                     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
@@ -122,6 +149,12 @@ export default function CreatorEarningsDetailPage() {
                       <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
                         ETB {comment.amount.toLocaleString()}
                       </span>
+                      {replied && (
+                        <span className="text-[11px] font-medium text-emerald-800 bg-emerald-100 border border-emerald-200 rounded-full px-2 py-0.5 inline-flex items-center gap-1">
+                        <ReplyIcon className="w-3 h-3" />
+                        Replied
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-slate-800">{comment.text}</p>
                   </div>
@@ -131,17 +164,63 @@ export default function CreatorEarningsDetailPage() {
                 </div>
 
                 {comment.replies && comment.replies.length > 0 && (
-                  <div className="mt-3 space-y-2 pl-3 border-l-2 border-slate-200">
+                  <div className="mt-3 space-y-2">
                     {comment.replies.map((reply) => (
-                      <div key={reply.id} className="pl-2">
-                        <p className="text-xs text-slate-500 mb-1">{reply.authorName}</p>
-                        <p className="text-sm text-slate-700">{reply.text}</p>
+                      <div key={reply.id} className="rounded-xl border border-emerald-200 bg-emerald-50 p-3">
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                          <p className="text-xs font-semibold text-emerald-700">{reply.authorName}</p>
+                          <p className="text-[11px] text-emerald-600 whitespace-nowrap">
+                            {new Date(reply.timestamp).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <p className="text-sm text-emerald-950">{reply.text}</p>
                       </div>
                     ))}
                   </div>
                 )}
+
+                <div className="mt-3">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setOpenReplyComposer((previous) => ({
+                        ...previous,
+                        [comment.id]: !composerOpen,
+                      }))
+                    }
+                    className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-sm font-semibold text-primary transition hover:bg-primary/10"
+                  >
+                    <ReplyIcon className="w-4 h-4" />
+                    {composerOpen ? 'Close reply' : 'Reply'}
+                  </button>
+
+                  {composerOpen && (
+                    <div className="mt-3 space-y-2">
+                      <textarea
+                        value={replyDrafts[comment.id] ?? ''}
+                        onChange={(event) =>
+                          setReplyDrafts((previous) => ({ ...previous, [comment.id]: event.target.value }))
+                        }
+                        placeholder="Write a reply to this supporter"
+                        className="w-full min-h-24 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => handleSendReply(comment.id, comment.donationId)}
+                          disabled={!replyDrafts[comment.id]?.trim()}
+                          className="inline-flex items-center gap-2 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-slate-300"
+                        >
+                          <Send className="w-4 h-4" />
+                          Send Reply
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            ))
+              );
+            })
           )}
         </div>
       </main>

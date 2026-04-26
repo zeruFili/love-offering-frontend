@@ -341,8 +341,6 @@ const ETHIOPIAN_COMMENTERS = [
   'Saron Gebremariam',
 ];
 
-const COMMENT_AMOUNTS = [100, 150, 200, 250, 320, 450, 600, 800, 1000, 1200];
-
 const COMMENT_TEXTS = [
   'This message touched my heart and encouraged me today.',
   'The worship lifted my spirit in a powerful way.',
@@ -358,14 +356,19 @@ const COMMENT_TEXTS = [
 
 const COMMENT_DATES = ['2025-07-07', '2025-07-08', '2025-07-09'];
 
+function getCommentAmount(videoIndex: number, commentIndex: number): number {
+  return 100 + ((videoIndex * 111 + commentIndex * 73) % 1101);
+}
+
 function buildSeedComments(): Comment[] {
   return MOCK_VIDEOS.flatMap((video, videoIndex) => {
     const donationId = `seed-don-${video.id}`;
 
     return Array.from({ length: 10 }, (_, commentIndex) => {
-      const amount = COMMENT_AMOUNTS[(videoIndex + commentIndex) % COMMENT_AMOUNTS.length];
+      const amount = getCommentAmount(videoIndex, commentIndex);
       const authorName = ETHIOPIAN_COMMENTERS[(videoIndex * 3 + commentIndex) % ETHIOPIAN_COMMENTERS.length];
       const text = COMMENT_TEXTS[(videoIndex + commentIndex) % COMMENT_TEXTS.length];
+      const hasReply = commentIndex < 4;
 
       return {
         id: `seed-com-${video.id}-${commentIndex + 1}`,
@@ -376,7 +379,17 @@ function buildSeedComments(): Comment[] {
         amount,
         text,
         timestamp: `${COMMENT_DATES[(videoIndex + commentIndex) % COMMENT_DATES.length]}T${String(10 + commentIndex).padStart(2, '0')}:00:00Z`,
-        replies: [],
+        replies: hasReply
+          ? [
+              {
+                id: `seed-reply-${video.id}-${commentIndex + 1}`,
+                authorId: video.creatorId,
+                authorName: video.creatorName,
+                text: 'Thank you for the support and encouraging words. This encouragement means a lot to our ministry.',
+                timestamp: `${COMMENT_DATES[(videoIndex + commentIndex) % COMMENT_DATES.length]}T${String(12 + commentIndex).padStart(2, '0')}:30:00Z`,
+              },
+            ]
+          : [],
       };
     });
   });
