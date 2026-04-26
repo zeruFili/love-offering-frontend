@@ -4,20 +4,22 @@ import { useAuth } from '@/lib/auth-context';
 import { useData } from '@/lib/data-context';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, DollarSign, Users, Heart, Upload, CreditCard, FileText } from 'lucide-react';
+import { ArrowLeft, DollarSign, Users, Heart, Upload, CreditCard, FileText, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { getDonationsByDonor, getDonationsByCreator, getVideoById } = useData();
+  const { videos, comments, getDonationsByDonor, getVideoById } = useData();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'donations' | 'earnings' | 'settings'>('donations');
   const isDonor = user?.role === 'donor';
   const isCreator = user ? ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user.role) : false;
   const canSeeCreatorTabs = !isDonor && isCreator;
   const primaryTab: 'donations' | 'earnings' = isDonor ? 'donations' : 'earnings';
+
+  const normalizeText = (value: string) => value.trim().toLowerCase();
 
   useEffect(() => {
     setMounted(true);
@@ -32,8 +34,34 @@ export default function DashboardPage() {
 
   if (!mounted || !user) return null;
 
-  const donations = isDonor ? getDonationsByDonor(user.id) : getDonationsByCreator(user.id);
-  const totalAmount = donations.reduce((sum, d) => sum + d.amount, 0);
+  const donations = isDonor ? getDonationsByDonor(user.id) : [];
+  const totalAmount = donations.reduce((sum, donation) => sum + donation.amount, 0);
+  const exactCreatorVideos = isCreator
+    ? videos.filter((video) => normalizeText(video.creatorName) === normalizeText(user.name))
+    : [];
+  const creatorVideos = isCreator
+    ? (exactCreatorVideos.length > 0
+        ? exactCreatorVideos
+        : videos.filter((video) => normalizeText(video.creatorRole) === normalizeText(user.role)))
+    : [];
+  const creatorVideoStats = creatorVideos.map((video) => {
+    const videoComments = comments.filter((comment) => comment.videoId === video.id);
+    const earnedAmount = videoComments.reduce((sum, comment) => sum + comment.amount, 0);
+    const supporterCount = new Set(videoComments.map((comment) => comment.authorName)).size;
+
+    return {
+      video,
+      earnedAmount,
+      supporterCount,
+      commentCount: videoComments.length,
+    };
+  });
+  const creatorTotalEarned = creatorVideoStats.reduce((sum, item) => sum + item.earnedAmount, 0);
+  const creatorSupporterCount = new Set(
+    comments
+      .filter((comment) => creatorVideos.some((video) => video.id === comment.videoId))
+      .map((comment) => comment.authorName)
+  ).size;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -112,19 +140,19 @@ export default function DashboardPage() {
                 <>
                   <div className="bg-linear-to-br from-primary to-primary/80 rounded-xl p-4 text-white">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-white/80">Total Earned</span>
+                      <span className="text-sm font-medium text-white/80">Total Received</span>
                       <DollarSign className="w-4 h-4" />
                     </div>
-                    <p className="text-2xl font-bold">${user.totalEarnings.toFixed(2)}</p>
-                    <p className="text-xs text-white/70 mt-1">{donations.length} donations</p>
+                    <p className="text-2xl font-bold">ETB {creatorTotalEarned.toLocaleString()}</p>
+                    <p className="text-xs text-white/70 mt-1">{creatorVideoStats.length} videos</p>
                   </div>
                   <div className="bg-linear-to-br from-accent to-accent/80 rounded-xl p-4 text-slate-900">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-slate-700">Supporters</span>
                       <Users className="w-4 h-4" />
                     </div>
-                    <p className="text-2xl font-bold">{user.supporterCount}</p>
-                    <p className="text-xs text-slate-600 mt-1">donors</p>
+                    <p className="text-2xl font-bold">{creatorSupporterCount}</p>
+                    <p className="text-xs text-slate-600 mt-1">unique givers</p>
                   </div>
                 </>
               )}
@@ -182,7 +210,7 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                {donations.length > 0 ? (
+                {isDonor && donations.length > 0 ? (
                   <div className="space-y-3">
                     {donations.map((donation) => (
                       <div key={donation.id} className="bg-white rounded-xl border border-slate-200 p-4">
@@ -239,6 +267,54 @@ export default function DashboardPage() {
                       </div>
                     ))}
                   </div>
+                ) : !isDonor ? (
+                  creatorVideoStats.length > 0 ? (
+                    <div className="space-y-3">
+                      {creatorVideoStats.map(({ video, earnedAmount, supporterCount, commentCount }) => (
+                        <Link key={video.id} href={`/dashboard/earnings/${video.id}`} className="block">
+                          <div className="bg-white rounded-xl border border-slate-200 p-4 hover:border-primary hover:shadow-sm transition">
+                            <div className="flex items-start gap-3">
+                              <img
+                                src={video.thumbnail}
+                                alt={video.title}
+                                className="w-16 h-16 rounded-lg object-cover border border-slate-200 shrink-0"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-slate-900 truncate">{video.title}</p>
+                                    <p className="text-xs text-slate-500 mt-1 truncate">{video.creatorName}</p>
+                                  </div>
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary shrink-0">
+                                    <PlayCircle className="w-3.5 h-3.5" />
+                                    Open
+                                  </span>
+                                </div>
+
+                                <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+                                  <span className="inline-block px-2 py-1 rounded-full bg-slate-100">
+                                    ETB {earnedAmount.toLocaleString()} earned
+                                  </span>
+                                  <span className="inline-block px-2 py-1 rounded-full bg-slate-100">
+                                    {commentCount} gifts
+                                  </span>
+                                  <span className="inline-block px-2 py-1 rounded-full bg-slate-100">
+                                    {supporterCount} supporters
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-white border border-slate-200 rounded-xl">
+                      <Heart className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                      <p className="text-slate-600 mb-2">No videos matched this creator yet</p>
+                      <p className="text-xs text-slate-500">Creator videos are matched by creator name, with role fallback for seeded mock data.</p>
+                    </div>
+                  )
                 ) : (
                   <div className="text-center py-12">
                     <Heart className="w-12 h-12 text-slate-300 mx-auto mb-4" />
