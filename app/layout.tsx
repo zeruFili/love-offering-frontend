@@ -51,7 +51,7 @@ export default function RootLayout({
       <head>
         <Script src="https://telegram.org/js/telegram-web-app.js?59" strategy="beforeInteractive" />
       </head>
-      <body className="font-sans antialiased bg-background text-foreground">
+      <body className="font-sans antialiased bg-background text-foreground" suppressHydrationWarning>
         <Script id="telegram-webapp-ready" strategy="afterInteractive">{`
           window.Telegram?.WebApp?.ready?.();
         `}</Script>
