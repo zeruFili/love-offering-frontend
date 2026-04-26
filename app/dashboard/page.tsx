@@ -11,7 +11,7 @@ import Link from 'next/link';
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { getDonationsByDonor, getDonationsByCreator } = useData();
+  const { getDonationsByDonor, getDonationsByCreator, getVideoById } = useData();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'donations' | 'earnings' | 'settings'>('donations');
   const isDonor = user?.role === 'donor';
@@ -187,11 +187,37 @@ export default function DashboardPage() {
                     {donations.map((donation) => (
                       <div key={donation.id} className="bg-white rounded-xl border border-slate-200 p-4">
                         <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="font-semibold text-slate-900">{isDonor ? 'Gift to' : 'From'} {isDonor ? donation.videoId : donation.donorName}</p>
-                            <p className="text-xs text-slate-500 mt-1">
-                              {new Date(donation.timestamp).toLocaleDateString()}
-                            </p>
+                          <div className="flex items-start gap-3 min-w-0">
+                            {isDonor ? (() => {
+                              const supportedVideo = getVideoById(donation.videoId);
+
+                              return supportedVideo ? (
+                                <img
+                                  src={supportedVideo.thumbnail}
+                                  alt={supportedVideo.title}
+                                  className="w-14 h-14 rounded-lg object-cover border border-slate-200 shrink-0"
+                                />
+                              ) : (
+                                <div className="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center text-[10px] text-slate-500 text-center px-1">
+                                  No video
+                                </div>
+                              );
+                            })() : null}
+                            <div className="min-w-0">
+                              <p className="font-semibold text-slate-900 truncate">
+                                {isDonor
+                                  ? getVideoById(donation.videoId)?.title ?? donation.videoId
+                                  : donation.donorName}
+                              </p>
+                              {isDonor && getVideoById(donation.videoId)?.creatorName && (
+                                <p className="text-xs text-slate-500 mt-1 truncate">
+                                  {getVideoById(donation.videoId)?.creatorName}
+                                </p>
+                              )}
+                              <p className="text-xs text-slate-500 mt-1">
+                                {new Date(donation.timestamp).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
                           <p className="text-lg font-bold text-primary">${donation.amount.toFixed(2)}</p>
                         </div>
