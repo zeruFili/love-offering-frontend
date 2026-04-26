@@ -7,6 +7,7 @@ import { useEffect, useState } from 'react';
 import { ArrowLeft, MessageCircle, Heart, Gift } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { getYouTubeEmbedUrl } from '@/lib/utils';
 
 export default function VideoCommentsPage() {
   const router = useRouter();
@@ -40,20 +41,32 @@ export default function VideoCommentsPage() {
   const threadComments = comments
     .filter((c) => c.videoId === video.id)
     .sort((left, right) => new Date(right.timestamp).getTime() - new Date(left.timestamp).getTime());
+  const embedUrl = getYouTubeEmbedUrl(video.youtubeUrl);
 
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+        <button onClick={() => router.push('/')} className="p-2 hover:bg-slate-100 rounded-lg">
           <ArrowLeft className="w-5 h-5 text-slate-600" />
         </button>
-        <h1 className="font-semibold text-slate-900">back</h1>
+        <h1 className="font-semibold text-slate-900">Home</h1>
       </div>
 
       <main className="px-4 py-6 max-w-3xl mx-auto">
         <div className="bg-white rounded-xl border border-slate-200 overflow-hidden mb-6">
           <div className="aspect-video bg-slate-200 overflow-hidden relative">
-            <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+            {embedUrl ? (
+              <iframe
+                src={embedUrl}
+                title={video.title}
+                className="w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+            ) : (
+              <img src={video.thumbnail} alt={video.title} className="w-full h-full object-cover" />
+            )}
             <div className="absolute top-3 right-3 bg-primary text-white text-xs font-semibold px-2 py-1 rounded">
               {video.duration}
             </div>
@@ -93,7 +106,12 @@ export default function VideoCommentsPage() {
               <div key={comment.id} className="bg-white border border-slate-200 rounded-xl p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <p className="text-xs text-slate-500 mb-1">{comment.authorName}</p>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
+                      <p className="text-xs font-semibold text-slate-600">{comment.authorName}</p>
+                      <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-full px-2 py-0.5">
+                        ETB {comment.amount.toLocaleString()}
+                      </span>
+                    </div>
                     <p className="text-sm text-slate-800">{comment.text}</p>
                   </div>
                   <p className="text-[11px] text-slate-400 whitespace-nowrap">

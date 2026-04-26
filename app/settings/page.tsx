@@ -124,7 +124,7 @@ export default function SettingsPage() {
                 </button>
               </Link>
               {user.verificationStatus !== 'approved' && (
-                <Link href="/verify" className="block">
+                <Link href="/verify/role-selection" className="block">
                   <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
                     <FileText className="w-5 h-5 text-amber-600" />
                     <div>
