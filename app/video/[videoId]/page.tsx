@@ -46,10 +46,10 @@ export default function VideoCommentsPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
-        <button onClick={() => router.back()} className="p-2 hover:bg-slate-100 rounded-lg">
+        <button onClick={() => router.push('/')} className="p-2 hover:bg-slate-100 rounded-lg">
           <ArrowLeft className="w-5 h-5 text-slate-600" />
         </button>
-        <h1 className="font-semibold text-slate-900">back</h1>
+        <h1 className="font-semibold text-slate-900">Home</h1>
       </div>
 
       <main className="px-4 py-6 max-w-3xl mx-auto">
