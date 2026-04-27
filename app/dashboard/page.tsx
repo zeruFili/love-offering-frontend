@@ -4,19 +4,22 @@ import { useAuth } from '@/lib/auth-context';
 import { useData } from '@/lib/data-context';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, DollarSign, Users, Heart, Upload, CreditCard, FileText } from 'lucide-react';
+import { ArrowLeft, DollarSign, Users, Heart, Upload, CreditCard, FileText, PlayCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
-  const { getDonationsByDonor, getDonationsByCreator, getVideosByCreator } = useData();
+  const { videos, comments, getDonationsByDonor, getVideoById } = useData();
   const [mounted, setMounted] = useState(false);
-  const [activeTab, setActiveTab] = useState<'donations' | 'earnings' | 'videos' | 'settings'>('donations');
+  const [activeTab, setActiveTab] = useState<'donations' | 'earnings' | 'settings'>('donations');
   const isDonor = user?.role === 'donor';
   const isCreator = user ? ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user.role) : false;
+  const canSeeCreatorTabs = !isDonor && isCreator;
   const primaryTab: 'donations' | 'earnings' = isDonor ? 'donations' : 'earnings';
+
+  const normalizeText = (value: string) => value.trim().toLowerCase();
 
   useEffect(() => {
     setMounted(true);
@@ -31,9 +34,34 @@ export default function DashboardPage() {
 
   if (!mounted || !user) return null;
 
-  const donations = isDonor ? getDonationsByDonor(user.id) : getDonationsByCreator(user.id);
-  const myVideos = isCreator ? getVideosByCreator(user.id) : [];
-  const totalAmount = donations.reduce((sum, d) => sum + d.amount, 0);
+  const donations = isDonor ? getDonationsByDonor(user.id) : [];
+  const totalAmount = donations.reduce((sum, donation) => sum + donation.amount, 0);
+  const exactCreatorVideos = isCreator
+    ? videos.filter((video) => normalizeText(video.creatorName) === normalizeText(user.name))
+    : [];
+  const creatorVideos = isCreator
+    ? (exactCreatorVideos.length > 0
+        ? exactCreatorVideos
+        : videos.filter((video) => normalizeText(video.creatorRole) === normalizeText(user.role)))
+    : [];
+  const creatorVideoStats = creatorVideos.map((video) => {
+    const videoComments = comments.filter((comment) => comment.videoId === video.id);
+    const earnedAmount = videoComments.reduce((sum, comment) => sum + comment.amount, 0);
+    const supporterCount = new Set(videoComments.map((comment) => comment.authorName)).size;
+
+    return {
+      video,
+      earnedAmount,
+      supporterCount,
+      commentCount: videoComments.length,
+    };
+  });
+  const creatorTotalEarned = creatorVideoStats.reduce((sum, item) => sum + item.earnedAmount, 0);
+  const creatorSupporterCount = new Set(
+    comments
+      .filter((comment) => creatorVideos.some((video) => video.id === comment.videoId))
+      .map((comment) => comment.authorName)
+  ).size;
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -58,12 +86,11 @@ export default function DashboardPage() {
               <div className="flex gap-2 md:flex-col">
                 {[
                   { id: primaryTab, label: isDonor ? 'Supported' : 'Earnings' },
-                  isCreator ? { id: 'videos', label: 'My Videos' } : null,
-                  isCreator ? { id: 'settings', label: 'Bank Accounts' } : null,
+                  canSeeCreatorTabs ? { id: 'settings', label: 'Bank Accounts' } : null,
                 ].filter(Boolean).map((tab) => (
                   <button
                     key={tab!.id}
-                    onClick={() => setActiveTab(tab!.id as 'donations' | 'earnings' | 'videos' | 'settings')}
+                    onClick={() => setActiveTab(tab!.id as 'donations' | 'earnings' | 'settings')}
                     className={`flex-1 md:flex-none text-left px-3 py-2.5 rounded-lg text-sm font-medium transition ${
                       activeTab === tab!.id
                         ? 'bg-primary/10 text-primary'
@@ -73,6 +100,13 @@ export default function DashboardPage() {
                     {tab!.label}
                   </button>
                 ))}
+                {canSeeCreatorTabs && (
+                  <Link href="/upload" className="flex-1 md:flex-none">
+                    <button className="w-full text-left px-3 py-2.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition">
+                      Upload Video
+                    </button>
+                  </Link>
+                )}
               </div>
             </div>
           </aside>
@@ -106,19 +140,19 @@ export default function DashboardPage() {
                 <>
                   <div className="bg-linear-to-br from-primary to-primary/80 rounded-xl p-4 text-white">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm font-medium text-white/80">Total Earned</span>
+                      <span className="text-sm font-medium text-white/80">Total Received</span>
                       <DollarSign className="w-4 h-4" />
                     </div>
-                    <p className="text-2xl font-bold">${user.totalEarnings.toFixed(2)}</p>
-                    <p className="text-xs text-white/70 mt-1">{donations.length} donations</p>
+                    <p className="text-2xl font-bold">ETB {creatorTotalEarned.toLocaleString()}</p>
+                    <p className="text-xs text-white/70 mt-1">{creatorVideoStats.length} videos</p>
                   </div>
                   <div className="bg-linear-to-br from-accent to-accent/80 rounded-xl p-4 text-slate-900">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-slate-700">Supporters</span>
                       <Users className="w-4 h-4" />
                     </div>
-                    <p className="text-2xl font-bold">{user.supporterCount}</p>
-                    <p className="text-xs text-slate-600 mt-1">donors</p>
+                    <p className="text-2xl font-bold">{creatorSupporterCount}</p>
+                    <p className="text-xs text-slate-600 mt-1">unique givers</p>
                   </div>
                 </>
               )}
@@ -126,7 +160,7 @@ export default function DashboardPage() {
 
                 {/* Quick Actions */}
                 <div className="space-y-2 mb-6">
-                  {isCreator && user.verificationStatus === 'approved' && (
+                  {canSeeCreatorTabs && user.verificationStatus === 'approved' && (
                     <>
                       <Link href="/upload" className="block">
                         <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition text-left">
@@ -149,8 +183,8 @@ export default function DashboardPage() {
                     </>
                   )}
 
-                  {isCreator && user.verificationStatus !== 'approved' && (
-                    <Link href="/verify" className="block">
+                  {canSeeCreatorTabs && user.verificationStatus !== 'approved' && (
+                    <Link href="/verify/role-selection" className="block">
                       <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-amber-50 border border-amber-200 text-left">
                         <FileText className="w-5 h-5 text-amber-600" />
                         <div>
@@ -161,7 +195,7 @@ export default function DashboardPage() {
                     </Link>
                   )}
 
-                  {isCreator && (
+                  {canSeeCreatorTabs && (
                     <Link href="/bank-accounts" className="block">
                       <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition text-left">
                         <CreditCard className="w-5 h-5 text-primary" />
@@ -176,16 +210,42 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                {donations.length > 0 ? (
+                {isDonor && donations.length > 0 ? (
                   <div className="space-y-3">
                     {donations.map((donation) => (
                       <div key={donation.id} className="bg-white rounded-xl border border-slate-200 p-4">
                         <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <p className="font-semibold text-slate-900">{isDonor ? 'Gift to' : 'From'} {isDonor ? donation.videoId : donation.donorName}</p>
-                            <p className="text-xs text-slate-500 mt-1">
-                              {new Date(donation.timestamp).toLocaleDateString()}
-                            </p>
+                          <div className="flex items-start gap-3 min-w-0">
+                            {isDonor ? (() => {
+                              const supportedVideo = getVideoById(donation.videoId);
+
+                              return supportedVideo ? (
+                                <img
+                                  src={supportedVideo.thumbnail}
+                                  alt={supportedVideo.title}
+                                  className="w-14 h-14 rounded-lg object-cover border border-slate-200 shrink-0"
+                                />
+                              ) : (
+                                <div className="w-14 h-14 rounded-lg bg-slate-100 border border-slate-200 shrink-0 flex items-center justify-center text-[10px] text-slate-500 text-center px-1">
+                                  No video
+                                </div>
+                              );
+                            })() : null}
+                            <div className="min-w-0">
+                              <p className="font-semibold text-slate-900 truncate">
+                                {isDonor
+                                  ? getVideoById(donation.videoId)?.title ?? donation.videoId
+                                  : donation.donorName}
+                              </p>
+                              {isDonor && getVideoById(donation.videoId)?.creatorName && (
+                                <p className="text-xs text-slate-500 mt-1 truncate">
+                                  {getVideoById(donation.videoId)?.creatorName}
+                                </p>
+                              )}
+                              <p className="text-xs text-slate-500 mt-1">
+                                {new Date(donation.timestamp).toLocaleDateString()}
+                              </p>
+                            </div>
                           </div>
                           <p className="text-lg font-bold text-primary">${donation.amount.toFixed(2)}</p>
                         </div>
@@ -207,6 +267,54 @@ export default function DashboardPage() {
                       </div>
                     ))}
                   </div>
+                ) : !isDonor ? (
+                  creatorVideoStats.length > 0 ? (
+                    <div className="space-y-3">
+                      {creatorVideoStats.map(({ video, earnedAmount, supporterCount, commentCount }) => (
+                        <Link key={video.id} href={`/dashboard/earnings/${video.id}`} className="block">
+                          <div className="bg-white rounded-xl border border-slate-200 p-4 hover:border-primary hover:shadow-sm transition">
+                            <div className="flex items-start gap-3">
+                              <img
+                                src={video.thumbnail}
+                                alt={video.title}
+                                className="w-16 h-16 rounded-lg object-cover border border-slate-200 shrink-0"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <p className="font-semibold text-slate-900 truncate">{video.title}</p>
+                                    <p className="text-xs text-slate-500 mt-1 truncate">{video.creatorName}</p>
+                                  </div>
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1 text-xs font-semibold text-primary shrink-0">
+                                    <PlayCircle className="w-3.5 h-3.5" />
+                                    Open
+                                  </span>
+                                </div>
+
+                                <div className="mt-3 flex flex-wrap gap-2 text-xs text-slate-600">
+                                  <span className="inline-block px-2 py-1 rounded-full bg-slate-100">
+                                    ETB {earnedAmount.toLocaleString()} earned
+                                  </span>
+                                  <span className="inline-block px-2 py-1 rounded-full bg-slate-100">
+                                    {commentCount} gifts
+                                  </span>
+                                  <span className="inline-block px-2 py-1 rounded-full bg-slate-100">
+                                    {supporterCount} supporters
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 bg-white border border-slate-200 rounded-xl">
+                      <Heart className="w-12 h-12 text-slate-300 mx-auto mb-4" />
+                      <p className="text-slate-600 mb-2">No videos matched this creator yet</p>
+                      <p className="text-xs text-slate-500">Creator videos are matched by creator name, with role fallback for seeded mock data.</p>
+                    </div>
+                  )
                 ) : (
                   <div className="text-center py-12">
                     <Heart className="w-12 h-12 text-slate-300 mx-auto mb-4" />
@@ -225,53 +333,8 @@ export default function DashboardPage() {
               </div>
             )}
 
-            {/* My Videos Tab */}
-            {activeTab === 'videos' && isCreator && (
-              <div>
-                <div className="mb-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-slate-900">My Videos</h2>
-                  <Link href="/upload">
-                    <Button className="bg-primary hover:bg-primary/90 text-white">Upload Video</Button>
-                  </Link>
-                </div>
-
-                {myVideos.length > 0 ? (
-                  <div className="space-y-3">
-                    {myVideos.map((video) => (
-                      <div key={video.id} className="bg-white rounded-xl border border-slate-200 p-4">
-                        <div className="flex gap-3">
-                          <img
-                            src={video.thumbnail}
-                            alt={video.title}
-                            className="w-20 h-14 rounded-md object-cover shrink-0"
-                          />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-slate-900 line-clamp-1">{video.title}</p>
-                            <p className="text-xs text-slate-500 mt-1">Duration: {video.duration}</p>
-                            <p className="text-xs text-slate-500 mt-1">Status: {video.status}</p>
-                            <div className="mt-2">
-                              <Link href={`/contributors?videoId=${video.id}`} className="text-xs font-medium text-primary hover:underline">
-                                Manage Contributors
-                              </Link>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <p className="text-slate-600 mb-4">You have not uploaded videos yet</p>
-                    <Link href="/upload">
-                      <Button className="bg-primary hover:bg-primary/90 text-white">Upload Your First Video</Button>
-                    </Link>
-                  </div>
-                )}
-              </div>
-            )}
-
             {/* Bank Accounts Tab */}
-            {activeTab === 'settings' && isCreator && (
+            {activeTab === 'settings' && canSeeCreatorTabs && (
               <div>
                 {user.bankAccounts.length > 0 ? (
                   <div className="space-y-3 mb-6">

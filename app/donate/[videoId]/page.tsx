@@ -6,8 +6,21 @@ import { useData } from '@/lib/data-context';
 import { useRouter, useParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Heart, X } from 'lucide-react';
+import { ArrowLeft, Heart } from 'lucide-react';
 import Link from 'next/link';
+
+type ReceiptData = {
+  referenceId: string;
+  merchantId: string;
+  paymentDate: string;
+  amount: number;
+  payerName: string;
+  payerEmail: string;
+  paymentMethod: string;
+  videoTitle: string;
+  creatorName: string;
+  message: string;
+};
 
 export default function DonatePage() {
   const router = useRouter();
@@ -20,7 +33,6 @@ export default function DonatePage() {
   const [amount, setAmount] = useState('');
   const [comment, setComment] = useState('');
   const [selectedContributors, setSelectedContributors] = useState<Record<string, number>>({});
-  const [successAmount, setSuccessAmount] = useState<number | null>(null);
 
   if (!video || !user) {
     return (
@@ -43,6 +55,9 @@ export default function DonatePage() {
       return;
     }
 
+    const now = new Date();
+    const receiptReference = `RC-${now.getTime().toString(36).toUpperCase()}`;
+
     const newDonation = {
       id: `don-${Date.now()}`,
       donorId: user.id,
@@ -56,43 +71,27 @@ export default function DonatePage() {
     };
 
     addDonation(newDonation);
-    setSuccessAmount(parsedAmount);
+    const receiptData: ReceiptData = {
+      referenceId: receiptReference,
+      merchantId: `TX-${now.getTime().toString(36).toUpperCase()}`,
+      paymentDate: now.toLocaleDateString('en-GB'),
+      amount: parsedAmount,
+      payerName: user.name,
+      payerEmail: user.email,
+      paymentMethod: 'Test',
+      videoTitle: video.title,
+      creatorName: video.creatorName,
+      message: comment.trim() || 'Gift sent for ministry support',
+    };
+
+    sessionStorage.setItem(`gift-receipt-${receiptReference}`, JSON.stringify({ ...receiptData, videoId: video.id }));
+    router.push(`/receipt/${receiptReference}`);
     setAmount('');
     setComment('');
   };
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {successAmount !== null && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          <div className="relative w-full max-w-2xl rounded-2xl border border-green-200 bg-green-50 p-6 text-center shadow-lg">
-            <button
-              onClick={() => setSuccessAmount(null)}
-              className="absolute top-3 right-3 p-1.5 rounded-md text-green-700 hover:bg-green-100 transition"
-              aria-label="Close success message"
-              title="Close"
-            >
-              <X className="w-4 h-4" />
-            </button>
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Heart className="w-8 h-8 text-green-600" />
-            </div>
-            <h2 className="text-4xl font-bold text-green-900 mb-2">Donation Successful!</h2>
-            <p className="text-green-700 text-lg mb-4">
-              Your gift of ${successAmount.toFixed(2)} has been sent to support this ministry.
-            </p>
-            <div className="space-y-1 text-sm text-green-800">
-              <p>
-                <span className="font-semibold">Video Title:</span> {video.title}
-              </p>
-              <p>
-                <span className="font-semibold">Account Holder:</span> {video.creatorName}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <div className="sticky top-0 z-10 bg-white px-4 py-3 flex items-center gap-3">
         <button

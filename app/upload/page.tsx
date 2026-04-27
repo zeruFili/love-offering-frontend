@@ -25,7 +25,7 @@ export default function UploadPage() {
       return;
     }
     if (user.verificationStatus !== 'approved') {
-      router.push('/verify');
+      router.push('/verify/role-selection');
     }
   }, [user, router]);
 
@@ -105,7 +105,7 @@ export default function UploadPage() {
       <div className="px-4 py-6">
         {/* Info Alert */}
         <div className="mb-6 flex gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-          <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
           <div>
             <p className="text-sm font-semibold text-blue-900">Upload & Share</p>
             <p className="text-xs text-blue-700 mt-1">
