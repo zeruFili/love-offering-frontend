@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { ArrowLeft, Download, Printer, X } from 'lucide-react';
 
 type ReceiptData = {
@@ -18,16 +18,22 @@ type ReceiptData = {
   videoId: string;
 };
 
-export default function ReceiptClient({ receiptId }: { receiptId: string }) {
+export default function ReceiptClient({ receiptId }: { receiptId?: string } = {}) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
+  const resolvedReceiptId = receiptId ?? searchParams.get('receiptId') ?? '';
 
   useEffect(() => {
-    const storedReceipt = sessionStorage.getItem(`gift-receipt-${receiptId}`);
+    if (!resolvedReceiptId) {
+      return;
+    }
+
+    const storedReceipt = sessionStorage.getItem(`gift-receipt-${resolvedReceiptId}`);
     if (storedReceipt) {
       setReceipt(JSON.parse(storedReceipt));
     }
-  }, [receiptId]);
+  }, [resolvedReceiptId]);
 
   if (!receipt) {
     return (

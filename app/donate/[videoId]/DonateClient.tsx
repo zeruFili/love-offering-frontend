@@ -31,6 +31,16 @@ export default function DonateClient({ videoId }: { videoId: string }) {
   const [comment, setComment] = useState('');
   const [selectedContributors, setSelectedContributors] = useState<Record<string, number>>({});
 
+  useEffect(() => {
+    if (!video || !user) {
+      return;
+    }
+
+    const parsedAmount = Number.parseFloat(amount);
+    const safeAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
+    setSelectedContributors({ [video.creatorId]: safeAmount });
+  }, [amount, user, video]);
+
   if (!video || !user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -38,12 +48,6 @@ export default function DonateClient({ videoId }: { videoId: string }) {
       </div>
     );
   }
-
-  useEffect(() => {
-    const parsedAmount = Number.parseFloat(amount);
-    const safeAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
-    setSelectedContributors({ [video.creatorId]: safeAmount });
-  }, [amount, video.creatorId]);
 
   const handleDonate = () => {
     const parsedAmount = Number.parseFloat(amount);
