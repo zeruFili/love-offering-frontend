@@ -32,6 +32,7 @@ export interface User {
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
+  isAuthLoaded: boolean;
   login: (email: string, password: string) => boolean;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
@@ -170,12 +171,14 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [isAuthLoaded, setIsAuthLoaded] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('loveoffering_user');
     if (stored) {
       setUser(JSON.parse(stored));
     }
+    setIsAuthLoaded(true);
   }, []);
 
   const login = (email: string, password: string): boolean => {
@@ -231,7 +234,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, login, logout, updateUser, addBankAccount, updateBankAccount }}>
+    <AuthContext.Provider value={{ user, isLoggedIn: !!user, isAuthLoaded, login, logout, updateUser, addBankAccount, updateBankAccount }}>
       {children}
     </AuthContext.Provider>
   );

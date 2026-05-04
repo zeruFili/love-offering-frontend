@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
 import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
 import Script from 'next/script'
 import { AuthProvider } from '@/lib/auth-context'
 import { DataProvider } from '@/lib/data-context'
@@ -61,7 +60,6 @@ export default function RootLayout({
             <Toaster richColors position="top-center" />
           </DataProvider>
         </AuthProvider>
-        {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>
   )

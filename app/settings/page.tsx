@@ -9,15 +9,16 @@ import Link from 'next/link';
 
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthLoaded } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    if (!isAuthLoaded) return;
     if (!user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, router, isAuthLoaded]);
 
   if (!mounted || !user) return null;
 

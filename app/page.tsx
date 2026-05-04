@@ -11,7 +11,7 @@ import Link from 'next/link';
 
 export default function Home() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, isAuthLoaded } = useAuth();
   const { videos } = useData();
   const [mounted, setMounted] = useState(false);
   const [showMyVideos, setShowMyVideos] = useState(false);
@@ -20,10 +20,11 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
+    if (!isAuthLoaded) return;
     if (!user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, router, isAuthLoaded]);
 
   const handleLogout = () => {
     logout();

@@ -10,7 +10,7 @@ import Link from 'next/link';
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthLoaded } = useAuth();
   const { videos, comments, getDonationsByDonor, getVideoById } = useData();
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'donations' | 'earnings' | 'settings'>('donations');
@@ -23,10 +23,11 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setMounted(true);
+    if (!isAuthLoaded) return;
     if (!user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, router, isAuthLoaded]);
 
   useEffect(() => {
     setActiveTab(primaryTab);

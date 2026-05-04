@@ -9,7 +9,7 @@ import { ArrowLeft, Heart, MessageCircle, DollarSign, Users, Send, Reply as Repl
 
 export default function EarningsClient({ videoId }: { videoId: string }) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthLoaded } = useAuth();
   const { videos, comments, addReply } = useData();
   const [mounted, setMounted] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
@@ -17,10 +17,11 @@ export default function EarningsClient({ videoId }: { videoId: string }) {
 
   useEffect(() => {
     setMounted(true);
+    if (!isAuthLoaded) return;
     if (!user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, router, isAuthLoaded]);
 
   const normalizeText = (value: string) => value.trim().toLowerCase();
 

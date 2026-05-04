@@ -15,16 +15,17 @@ type VideoCommentsClientPageProps = {
 
 export default function VideoCommentsClientPage({ videoId }: VideoCommentsClientPageProps) {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthLoaded } = useAuth();
   const { videos, comments } = useData();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
+    if (!isAuthLoaded) return;
     if (!user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, router, isAuthLoaded]);
 
   if (!mounted || !user) return null;
 

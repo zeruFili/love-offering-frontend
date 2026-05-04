@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 
 export default function BankAccountsPage() {
   const router = useRouter();
-  const { user, addBankAccount, updateBankAccount } = useAuth();
+  const { user, addBankAccount, updateBankAccount, isAuthLoaded } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -20,10 +20,11 @@ export default function BankAccountsPage() {
 
   useEffect(() => {
     setMounted(true);
+    if (!isAuthLoaded) return;
     if (!user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, router, isAuthLoaded]);
 
   if (!mounted || !user) return null;
 
