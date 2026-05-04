@@ -3,9 +3,14 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+
   images: {
     unoptimized: true,
   },
-}
 
-export default nextConfig
+  output: "export",
+
+  basePath: "/love-offering-frontend", // ← ADD THIS
+};
+
+export default nextConfig;

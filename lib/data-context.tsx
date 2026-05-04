@@ -29,6 +29,7 @@ interface DataContextType {
   // Video methods
   getVideoById: (id: string) => Video | undefined;
   getVideosByCreator: (creatorId: string) => Video[];
+  getVideosByCreatorName: (creatorName: string) => Video[];
   toggleVideoStatus: (videoId: string) => void;
   
   // Donation methods
@@ -38,6 +39,7 @@ interface DataContextType {
   
   // Comment methods
   getCommentsByDonation: (donationId: string) => Comment[];
+  getCommentsByVideo: (videoId: string) => Comment[];
   addComment: (donationId: string, comment: Comment) => void;
   addReply: (donationId: string, commentId: string, reply: Reply) => void;
   
@@ -87,6 +89,11 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
   const getVideosByCreator = (creatorId: string) => 
     videos.filter(v => v.creatorId === creatorId);
 
+  const getVideosByCreatorName = (creatorName: string) => {
+    const normalizedCreatorName = creatorName.trim().toLowerCase();
+    return videos.filter((video) => video.creatorName.trim().toLowerCase() === normalizedCreatorName);
+  };
+
   const toggleVideoStatus = (videoId: string) => {
     setVideos(videos.map(v =>
       v.id === videoId
@@ -107,6 +114,9 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   const getCommentsByDonation = (donationId: string) =>
     comments.filter(c => c.donationId === donationId);
+
+  const getCommentsByVideo = (videoId: string) =>
+    comments.filter((comment) => comment.videoId === videoId);
 
   const addComment = (donationId: string, comment: Comment) => {
     const donation = donations.find((entry) => entry.id === donationId);
@@ -238,11 +248,13 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         contributorRequests,
         getVideoById,
         getVideosByCreator,
+        getVideosByCreatorName,
         toggleVideoStatus,
         getDonationsByDonor,
         getDonationsByCreator,
         addDonation,
         getCommentsByDonation,
+        getCommentsByVideo,
         addComment,
         addReply,
         getPendingVerifications,

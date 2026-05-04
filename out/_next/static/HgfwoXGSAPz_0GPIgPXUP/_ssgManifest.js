@@ -1,0 +1,1 @@
+self.__SSG_MANIFEST=new Set(["\u002Fdashboard\u002Fearnings\u002F[videoId]","\u002Fdonate\u002F[videoId]","\u002Fvideo\u002F[videoId]"]);self.__SSG_MANIFEST_CB&&self.__SSG_MANIFEST_CB()
