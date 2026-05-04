@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 
 export default function UploadPage() {
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, isAuthLoaded } = useAuth();
   const [mounted, setMounted] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
@@ -20,6 +20,7 @@ export default function UploadPage() {
 
   useEffect(() => {
     setMounted(true);
+    if (!isAuthLoaded) return;
     if (!user) {
       router.push('/login');
       return;
@@ -27,7 +28,7 @@ export default function UploadPage() {
     if (user.verificationStatus !== 'approved') {
       router.push('/verify/role-selection');
     }
-  }, [user, router]);
+  }, [user, router, isAuthLoaded]);
 
   if (!mounted || !user) return null;
 

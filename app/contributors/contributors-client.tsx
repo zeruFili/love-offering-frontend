@@ -59,7 +59,7 @@ const PARTICIPANTS = [
 export default function ContributorsClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useAuth();
+  const { user, isAuthLoaded } = useAuth();
   const {
     getVideosByCreator,
     createContributorRequest,
@@ -85,6 +85,7 @@ export default function ContributorsClient() {
 
   useEffect(() => {
     setMounted(true);
+    if (!isAuthLoaded) return;
     if (!user) {
       router.push('/login');
       return;
@@ -93,7 +94,7 @@ export default function ContributorsClient() {
     if (!isCreator) {
       router.push('/dashboard');
     }
-  }, [user, router, isCreator]);
+  }, [user, router, isCreator, isAuthLoaded]);
 
   useEffect(() => {
     if (!videoIdFromQuery) {
