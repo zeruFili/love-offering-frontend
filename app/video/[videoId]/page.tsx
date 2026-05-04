@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: 'Video',
 };
 
-export default function Page({ params }: { params: { videoId: string } }) {
-  return <VideoClient videoId={params.videoId} />;
+export default async function Page({ params }: { params: Promise<{ videoId: string }> }) {
+  const { videoId } = await params;
+  return <VideoClient videoId={videoId} />;
 }

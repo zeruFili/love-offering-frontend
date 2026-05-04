@@ -10,6 +10,7 @@ export const metadata: Metadata = {
   title: 'Donate',
 };
 
-export default function Page({ params }: { params: { videoId: string } }) {
-  return <DonateClient videoId={params.videoId} />;
+export default async function Page({ params }: { params: Promise<{ videoId: string }> }) {
+  const { videoId } = await params;
+  return <DonateClient videoId={videoId} />;
 }
