@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 import { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { ArrowLeft, Download, Printer, X } from 'lucide-react';
 
 type ReceiptData = {
@@ -18,10 +18,8 @@ type ReceiptData = {
   videoId: string;
 };
 
-export default function ReceiptPage() {
+export default function ReceiptClient({ receiptId }: { receiptId: string }) {
   const router = useRouter();
-  const params = useParams();
-  const receiptId = params.receiptId as string;
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
 
   useEffect(() => {
@@ -83,9 +81,9 @@ export default function ReceiptPage() {
             ['Payment Date', receipt.paymentDate],
             ['Payment Reason', receipt.message],
           ].map(([label, value], index) => (
-            <div key={label} className={`grid grid-cols-[1.15fr_1fr] gap-3 px-5 py-4 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-slate-100'}`}>
+            <div key={String(label)} className={`grid grid-cols-[1.15fr_1fr] gap-3 px-5 py-4 text-sm ${index % 2 === 0 ? 'bg-white' : 'bg-slate-100'}`}>
               <p className="text-slate-600">{label}</p>
-              <p className="font-semibold text-slate-900 text-right">{value}</p>
+              <p className="font-semibold text-slate-900 text-right">{value as string}</p>
             </div>
           ))}
         </div>
