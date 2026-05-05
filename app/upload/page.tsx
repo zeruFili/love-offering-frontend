@@ -95,12 +95,13 @@ export default function UploadPage() {
       <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-2 hover:bg-slate-100 rounded-lg"
+          className="inline-flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg"
+          aria-label="Back to previous"
         >
           <ArrowLeft className="w-5 h-5 text-slate-600" />
+          <UploadIcon className="w-5 h-5 text-primary" />
+          <span className="font-semibold text-slate-900">Upload Video</span>
         </button>
-        <UploadIcon className="w-5 h-5 text-primary" />
-        <h1 className="font-semibold text-slate-900">Upload Video</h1>
       </div>
 
       <div className="px-4 py-6">

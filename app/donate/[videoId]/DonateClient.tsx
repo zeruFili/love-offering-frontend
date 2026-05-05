@@ -96,11 +96,12 @@ export default function DonateClient({ videoId }: { videoId: string }) {
       <div className="sticky top-0 z-10 bg-white px-4 py-3 flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-2 hover:bg-slate-100 rounded-lg"
+          className="inline-flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg"
+          aria-label="Back to previous"
         >
           <ArrowLeft className="w-5 h-5 text-slate-600" />
+          <span className="font-semibold text-slate-900">Send a Gift</span>
         </button>
-        <h1 className="font-semibold text-slate-900">Send a Gift</h1>
       </div>
 
       <div className="px-4 py-6">

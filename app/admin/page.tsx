@@ -92,12 +92,13 @@ export default function AdminPage() {
       <div className="sticky top-0 z-10 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="p-2 hover:bg-slate-100 rounded-lg"
+          className="inline-flex items-center gap-3 p-2 hover:bg-slate-100 rounded-lg"
+          aria-label="Back to previous"
         >
           <ArrowLeft className="w-5 h-5 text-slate-600" />
+          <Shield className="w-5 h-5 text-primary" />
+          <span className="font-semibold text-slate-900">Admin Dashboard</span>
         </button>
-        <Shield className="w-5 h-5 text-primary" />
-        <h1 className="font-semibold text-slate-900">Admin Dashboard</h1>
       </div>
 
       {/* Tabs */}
