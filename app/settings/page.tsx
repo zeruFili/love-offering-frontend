@@ -3,7 +3,7 @@
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Settings as SettingsIcon, LogOut, Shield, FileText, CreditCard } from 'lucide-react';
+import { ArrowLeft, Settings as SettingsIcon, LogOut, Shield, FileText, CreditCard, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -141,6 +141,16 @@ export default function SettingsPage() {
         )}
 
         {/* Account Actions */}
+        <Link href="/contributor-requests" className="mb-6 block">
+          <button className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-primary hover:bg-primary/5">
+            <Inbox className="h-5 w-5 text-primary" />
+            <div>
+              <p className="text-sm font-semibold text-slate-900">Contributor Requests</p>
+              <p className="text-xs text-slate-600">Review invitations to join videos</p>
+            </div>
+          </button>
+        </Link>
+
         <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">Account</h2>
         <div className="space-y-2">
           <button

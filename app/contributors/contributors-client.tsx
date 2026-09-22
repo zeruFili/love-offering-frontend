@@ -61,6 +61,7 @@ export default function ContributorsClient() {
   const searchParams = useSearchParams();
   const { user, isAuthLoaded } = useAuth();
   const {
+    videos,
     getVideosByCreator,
     createContributorRequest,
     getContributorRequestsByCreator,
@@ -77,7 +78,22 @@ export default function ContributorsClient() {
   const [isVideoScoped, setIsVideoScoped] = useState(false);
 
   const isCreator = ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user?.role ?? '');
-  const creatorVideos = user ? getVideosByCreator(user.id) : [];
+  const normalizeText = (value: string) => value.trim().toLowerCase();
+  const creatorVideos = user
+    ? (() => {
+        const exactVideos = getVideosByCreator(user.id);
+        if (exactVideos.length > 0) return exactVideos;
+
+        const namedVideos = videos.filter(
+          (video) => normalizeText(video.creatorName) === normalizeText(user.name)
+        );
+        if (namedVideos.length > 0) return namedVideos;
+
+        return videos.filter(
+          (video) => normalizeText(video.creatorRole) === normalizeText(user.role)
+        );
+      })()
+    : [];
   const videoIdFromQuery = searchParams.get('videoId');
   const scopedVideos = videoIdFromQuery
     ? creatorVideos.filter((video) => video.id === videoIdFromQuery)
