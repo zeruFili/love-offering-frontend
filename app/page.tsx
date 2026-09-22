@@ -84,7 +84,7 @@ export default function Home() {
 
   if (!mounted) return null;
   if (!user) return null;
-  const canManageCreatorVideos = user.role !== 'donor' && ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user.role);
+  const canManageCreatorVideos = user.role !== 'donor' && ['church', 'ministry', 'preacher', 'singer', 'musician', 'worship_group', 'choir_director'].includes(user.role);
 
   return (
     <div className="min-h-screen bg-background pb-24">

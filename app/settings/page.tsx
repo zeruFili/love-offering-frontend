@@ -29,7 +29,7 @@ export default function SettingsPage() {
     }
   };
 
-  const isCreator = ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user.role);
+  const isCreator = ['church', 'ministry', 'preacher', 'singer', 'musician', 'worship_group', 'choir_director'].includes(user.role);
 
   return (
     <div className="min-h-screen bg-background pb-20">

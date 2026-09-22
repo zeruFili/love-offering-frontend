@@ -15,7 +15,7 @@ export default function DashboardPage() {
   const [mounted, setMounted] = useState(false);
   const [activeTab, setActiveTab] = useState<'donations' | 'earnings' | 'settings'>('donations');
   const isDonor = user?.role === 'donor';
-  const isCreator = user ? ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user.role) : false;
+  const isCreator = user ? ['church', 'ministry', 'preacher', 'singer', 'musician', 'worship_group', 'choir_director'].includes(user.role) : false;
   const canSeeCreatorTabs = !isDonor && isCreator;
   const primaryTab: 'donations' | 'earnings' = isDonor ? 'donations' : 'earnings';
 
