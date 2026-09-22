@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useData } from '@/lib/data-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Mail, LogOut, Settings, BarChart3, Heart, Shield, Gift, Menu, Search, Compass, Radio, History, User, Upload, FileText } from 'lucide-react';
+import { Mail, LogOut, Settings, BarChart3, Heart, Shield, Gift, Menu, Search, History, User, Upload, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
@@ -80,8 +80,6 @@ export default function Home() {
 
     return filteredBySearch.filter((video) => video.creatorRole === roleByCategory[activeCategory]);
   })();
-  const featuredVideoId = filteredVideos[0]?.id ?? videos[0]?.id;
-
   if (!mounted) return null;
   if (!user) return null;
   const canManageCreatorVideos = user.role !== 'donor' && ['church', 'ministry', 'preacher', 'singer', 'musician', 'worship_group', 'choir_director'].includes(user.role);
@@ -252,14 +250,6 @@ export default function Home() {
               <Link href="/dashboard" className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition">
                 <BarChart3 className="w-5 h-5" />
                 <span>Dashboard</span>
-              </Link>
-              <Link href="/contributors" className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition">
-                <Compass className="w-5 h-5" />
-                <span>Explore</span>
-              </Link>
-              <Link href={featuredVideoId ? `/video/${featuredVideoId}` : '/'} className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition">
-                <Radio className="w-5 h-5" />
-                <span>Live</span>
               </Link>
               <Link href="/settings" className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition">
                 <Settings className="w-5 h-5" />
