@@ -137,6 +137,7 @@ export default function ContributorsClient() {
     getContributorRequestsByCreator,
     getVideoContributors,
     updateContributorRequestRole,
+    deleteContributorRequest,
     updateContributorRole,
     removeContributor,
   } = useData();
@@ -461,39 +462,61 @@ export default function ContributorsClient() {
                             <p className="text-xs text-amber-700 mt-2 font-medium">Awaiting acceptance</p>
                           </div>
                           {editingRequestId === request.id ? (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                const role = (pendingRoleByRequestId[request.id] ?? request.role).trim();
-                                if (!role) {
-                                  setMessage('error-no-role');
-                                  return;
-                                }
-                                updateContributorRequestRole(request.id, role);
-                                setEditingRequestId(null);
-                              }}
-                              className="bg-white text-primary"
-                            >
-                              <Save className="h-4 w-4" />
-                              Save
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const role = (pendingRoleByRequestId[request.id] ?? request.role).trim();
+                                  if (!role) {
+                                    setMessage('error-no-role');
+                                    return;
+                                  }
+                                  updateContributorRequestRole(request.id, role);
+                                  setEditingRequestId(null);
+                                }}
+                                className="bg-white text-primary"
+                              >
+                                <Save className="h-4 w-4" />
+                                Save
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => deleteContributorRequest(request.id)}
+                                className="border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700"
+                                aria-label={`Delete request for ${request.contributorDisplayName}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setPendingRoleByRequestId((previous) => ({
-                                  ...previous,
-                                  [request.id]: request.role,
-                                }));
-                                setEditingRequestId(request.id);
-                              }}
-                              className="bg-white text-slate-700"
-                            >
-                              <Pencil className="h-4 w-4" />
-                              Edit
-                            </Button>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setPendingRoleByRequestId((previous) => ({
+                                    ...previous,
+                                    [request.id]: request.role,
+                                  }));
+                                  setEditingRequestId(request.id);
+                                }}
+                                className="bg-white text-slate-700"
+                              >
+                                <Pencil className="h-4 w-4" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => deleteContributorRequest(request.id)}
+                                className="border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700"
+                                aria-label={`Delete request for ${request.contributorDisplayName}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
                           )}
                         </div>
                       </div>

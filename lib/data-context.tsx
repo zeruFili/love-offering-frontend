@@ -59,6 +59,7 @@ interface DataContextType {
   acceptContributorRequest: (requestId: string) => void;
   rejectContributorRequest: (requestId: string, note?: string) => void;
   updateContributorRequestRole: (requestId: string, role: string) => void;
+  deleteContributorRequest: (requestId: string) => void;
   updateContributorRole: (contributorId: string, role: string) => void;
   removeContributor: (contributorId: string) => void;
   getContributionsForUser: (userId: string) => Contributor[];
@@ -228,6 +229,10 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const deleteContributorRequest = (requestId: string) => {
+    setContributorRequests((previous) => previous.filter((item) => item.id !== requestId));
+  };
+
   const updateContributorRole = (contributorId: string, role: string) => {
     setContributors((previous) =>
       previous.map((item) => (item.id === contributorId ? { ...item, role } : item))
@@ -279,6 +284,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         acceptContributorRequest,
         rejectContributorRequest,
         updateContributorRequestRole,
+        deleteContributorRequest,
         updateContributorRole,
         removeContributor,
         getContributionsForUser,
