@@ -10,7 +10,7 @@ const nextConfig = {
     unoptimized: true,
   },
 
-  output: "export",
+  ...(isProduction ? { output: "export" } : {}),
   ...(isProduction ? { basePath: "/love-offering-frontend" } : {}),
 };
 
