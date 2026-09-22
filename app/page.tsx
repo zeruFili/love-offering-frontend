@@ -266,19 +266,13 @@ export default function Home() {
                 <span>Settings</span>
               </Link>
               {canManageCreatorVideos && (
-                <>
-                  <button
-                    onClick={() => setShowMyVideos((previous) => !previous)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition"
-                  >
-                    <History className="w-5 h-5" />
-                    <span>{showMyVideos ? 'All Videos' : 'My Videos'}</span>
-                  </button>
-                  <Link href="/upload" className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition">
-                    <Upload className="w-5 h-5" />
-                    <span>Upload Video</span>
-                  </Link>
-                </>
+                <button
+                  onClick={() => setShowMyVideos((previous) => !previous)}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition"
+                >
+                  <History className="w-5 h-5" />
+                  <span>{showMyVideos ? 'All Videos' : 'My Videos'}</span>
+                </button>
               )}
               {user.role === 'donor' && (
                 <Link href="/verify/role-selection" className="flex items-center gap-3 px-3 py-2 rounded-xl text-amber-700 bg-amber-50 hover:bg-amber-100 transition">
@@ -290,6 +284,17 @@ export default function Home() {
           </aside>
 
           <div>
+            {canManageCreatorVideos && showMyVideos && (
+              <div className="flex justify-end pb-4">
+                <Link href="/upload">
+                  <button className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90">
+                    <Upload className="w-4 h-4" />
+                    <span>Upload Video</span>
+                  </button>
+                </Link>
+              </div>
+            )}
+
             <div className="flex gap-2 overflow-x-auto pb-4">
               {desktopCategories.map((category) => (
                 <button
