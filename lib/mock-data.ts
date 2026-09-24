@@ -56,6 +56,7 @@ export interface Contributor {
   profilePhoto?: string;
   role: string;
   bankAccountLinked: boolean;
+  earnings?: number;
   acceptedAt?: string;
 }
 
@@ -314,7 +315,7 @@ const DEMO_MUSIC_VIDEOS: Video[] = [
     title: 'Ante Malet Lene (አንተ ማለት ለኔ)',
     creatorId: '9',
     creatorName: 'Minase Firdawek & Habtamu Taye',
-    creatorRole: 'musician',
+    creatorRole: 'singer',
     youtubeUrl: 'http://www.youtube.com/watch?v=kkJI-z2OmwE',
     thumbnail: getYouTubeThumbnailUrl('http://www.youtube.com/watch?v=kkJI-z2OmwE'),
     duration: 'YouTube',
@@ -416,6 +417,19 @@ const DEMO_MUSIC_VIDEOS: Video[] = [
 ];
 
 const MOCK_CONTRIBUTORS: Contributor[] = [
+  {
+    id: 'demo-contributor-endegena-background-singer',
+    creatorId: '13',
+    userId: '12',
+    videoId: 'demo-video-samuel-endegena',
+    userName: 'sofia',
+    displayName: 'Sofia Shibabaw',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Sofia+Shibabaw&background=e2f6f6&color=1b5e5e',
+    role: 'Background Singer',
+    bankAccountLinked: true,
+    earnings: 420,
+    acceptedAt: '2026-09-21T15:00:00Z',
+  },
   {
     id: 'demo-contributor-hallelujah-ephrem',
     creatorId: '5',
@@ -723,7 +737,42 @@ function buildSeedComments(): Comment[] {
   });
 }
 
-const MOCK_COMMENTS: Comment[] = buildSeedComments();
+const MOCK_COMMENTS: Comment[] = [
+  ...buildSeedComments(),
+  {
+    id: 'demo-comment-endegena-1',
+    donationId: 'demo-donation-endegena-1',
+    videoId: 'demo-video-samuel-endegena',
+    authorId: 'demo-supporter-1',
+    authorName: 'Marta Bekele',
+    amount: 900,
+    text: 'The harmony and message in this song are beautiful. Thank you for sharing it.',
+    timestamp: '2026-09-21T09:30:00Z',
+    replies: [],
+  },
+  {
+    id: 'demo-comment-endegena-2',
+    donationId: 'demo-donation-endegena-2',
+    videoId: 'demo-video-samuel-endegena',
+    authorId: 'demo-supporter-2',
+    authorName: 'Dawit Tadesse',
+    amount: 650,
+    text: 'This worship moment encouraged me today. Keep creating music that blesses people.',
+    timestamp: '2026-09-21T12:15:00Z',
+    replies: [],
+  },
+  {
+    id: 'demo-comment-endegena-3',
+    donationId: 'demo-donation-endegena-3',
+    videoId: 'demo-video-samuel-endegena',
+    authorId: 'demo-supporter-3',
+    authorName: 'Hanna Girma',
+    amount: 350,
+    text: 'A powerful performance. The background vocals add so much warmth.',
+    timestamp: '2026-09-22T08:45:00Z',
+    replies: [],
+  },
+];
 
 const MOCK_VERIFICATION_REQUESTS: VerificationRequest[] = [
   {

@@ -22,6 +22,7 @@ import {
 
 interface DataContextType {
   videos: Video[];
+  isDataLoaded: boolean;
   donations: Donation[];
   comments: Comment[];
   verificationRequests: VerificationRequest[];
@@ -73,6 +74,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [videos, setVideos] = useState<Video[]>([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
@@ -89,6 +91,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     setAdminLogs(MOCK_ADMIN_LOGS);
     setContributors(MOCK_CONTRIBUTORS);
     setContributorRequests(MOCK_CONTRIBUTOR_REQUESTS);
+    setIsDataLoaded(true);
   }, []);
 
   const getVideoById = (id: string) => videos.find(v => v.id === id);
@@ -257,6 +260,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     <DataContext.Provider
       value={{
         videos,
+        isDataLoaded,
         donations,
         comments,
         verificationRequests,

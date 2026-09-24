@@ -1,9 +1,9 @@
 import VideoClient from './VideoClient';
 import { Metadata } from 'next';
-import { MOCK_VIDEOS } from '@/lib/mock-data';
+import { MOCK_VIDEOS, DEMO_MUSIC_VIDEOS } from '@/lib/mock-data';
 
 export async function generateStaticParams() {
-  return MOCK_VIDEOS.map((video) => ({ videoId: video.id }));
+  return [...MOCK_VIDEOS, ...DEMO_MUSIC_VIDEOS].map((video) => ({ videoId: video.id }));
 }
 
 export const metadata: Metadata = {

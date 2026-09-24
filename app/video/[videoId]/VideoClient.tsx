@@ -12,7 +12,7 @@ import { getYouTubeEmbedUrl } from '@/lib/utils';
 export default function VideoClient({ videoId }: { videoId: string }) {
   const router = useRouter();
   const { user, isAuthLoaded } = useAuth();
-  const { videos, comments } = useData();
+  const { videos, comments, isDataLoaded } = useData();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -23,7 +23,13 @@ export default function VideoClient({ videoId }: { videoId: string }) {
     }
   }, [user, router, isAuthLoaded]);
 
-  if (!mounted || !user) return null;
+  if (!mounted || !user || !isDataLoaded) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <p className="text-sm text-slate-600">Loading video...</p>
+      </div>
+    );
+  }
 
   const video = videos.find((v) => v.id === videoId);
   if (!video) {
