@@ -120,6 +120,9 @@ export default function SettingsPage() {
               <p className="text-sm font-semibold text-slate-900">
                 {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
               </p>
+              <Link href="/verify/role-selection" className="mt-2 inline-block">
+                <Button type="button" variant="outline" size="sm">Change Role</Button>
+              </Link>
             </div>
             {isCreator && (
               <div>
