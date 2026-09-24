@@ -18,6 +18,7 @@ export interface BankAccount {
 export interface User {
   id: string;
   email: string;
+  phone?: string;
   name: string;
   role: UserRole;
   verificationStatus: VerificationStatus;
@@ -35,6 +36,7 @@ interface AuthContextType {
   isAuthLoaded: boolean;
   login: (email: string, password: string) => boolean;
   logout: () => void;
+  updateProfile: (updates: { name: string; phone: string; email: string; password?: string }) => void;
   updateUser: (updates: Partial<User>) => void;
   addBankAccount: (account: Omit<BankAccount, 'id'>) => void;
   updateBankAccount: (id: string, updates: Partial<BankAccount>) => void;
@@ -195,9 +197,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = (email: string, password: string): boolean => {
+    const storedCredentials = localStorage.getItem('loveoffering_credentials');
+    const credentials = storedCredentials ? JSON.parse(storedCredentials) as { email: string; password: string } : null;
     const userRecord = MOCK_USERS[email] ?? ADDITIONAL_MOCK_USERS[email];
-    if (userRecord && userRecord.password === password) {
-      const userData = { ...userRecord.user };
+    const isStoredUser = credentials?.email === email && credentials.password === password;
+    if ((userRecord && userRecord.password === password) || isStoredUser) {
+      const storedUser = localStorage.getItem('loveoffering_user');
+      const userData = storedUser && credentials?.email === email
+        ? JSON.parse(storedUser) as User
+        : { ...userRecord!.user };
       setUser(userData);
       localStorage.setItem('loveoffering_user', JSON.stringify(userData));
       return true;
@@ -208,6 +216,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('loveoffering_user');
+  };
+
+  const updateProfile = (updates: { name: string; phone: string; email: string; password?: string }) => {
+    if (!user) return;
+
+    const updated = { ...user, name: updates.name, phone: updates.phone, email: updates.email };
+    setUser(updated);
+    localStorage.setItem('loveoffering_user', JSON.stringify(updated));
+
+    const storedCredentials = localStorage.getItem('loveoffering_credentials');
+    const currentCredentials = storedCredentials
+      ? JSON.parse(storedCredentials) as { email: string; password: string }
+      : { email: user.email, password: '' };
+    localStorage.setItem('loveoffering_credentials', JSON.stringify({
+      email: updates.email,
+      password: updates.password || currentCredentials.password,
+    }));
   };
 
   const updateUser = (updates: Partial<User>) => {
@@ -247,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, isAuthLoaded, login, logout, updateUser, addBankAccount, updateBankAccount }}>
+    <AuthContext.Provider value={{ user, isLoggedIn: !!user, isAuthLoaded, login, logout, updateProfile, updateUser, addBankAccount, updateBankAccount }}>
       {children}
     </AuthContext.Provider>
   );
