@@ -3,7 +3,7 @@
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Settings as SettingsIcon, LogOut, Shield, FileText, CreditCard, Inbox } from 'lucide-react';
+import { ArrowLeft, Settings as SettingsIcon, LogOut, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -89,67 +89,24 @@ export default function SettingsPage() {
         {/* Creator Actions */}
         {isCreator && (
           <>
-            <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">Creator Tools</h2>
-            <div className="space-y-2 mb-6">
-              {user.verificationStatus === 'approved' && (
-                <>
-                  <Link href="/upload" className="block">
-                    <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition">
-                      <FileText className="w-5 h-5 text-primary" />
+            {user.verificationStatus !== 'approved' && (
+              <>
+                <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">Creator Tools</h2>
+                <div className="space-y-2 mb-6">
+                  <Link href="/verify/role-selection" className="block">
+                    <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                      <FileText className="w-5 h-5 text-amber-600" />
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">Upload Video</p>
-                        <p className="text-xs text-slate-600">Share ministry content</p>
+                        <p className="text-sm font-semibold text-amber-900">Get Verified</p>
+                        <p className="text-xs text-amber-700">Submit documents to start earning</p>
                       </div>
                     </button>
                   </Link>
-                  <Link href="/contributors" className="block">
-                    <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition">
-                      <Shield className="w-5 h-5 text-primary" />
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">Manage Contributors</p>
-                        <p className="text-xs text-slate-600">Add co-creators to videos</p>
-                      </div>
-                    </button>
-                  </Link>
-                </>
-              )}
-              <Link href="/bank-accounts" className="block">
-                <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition">
-                  <CreditCard className="w-5 h-5 text-primary" />
-                  <div>
-                    {/* FIXED: Added missing quote and closing tag */}
-                    <p className="text-sm font-semibold text-slate-900">Accounts</p>
-                    <p className="text-xs text-slate-600">
-                      {user.bankAccounts?.length > 0 ? `${user.bankAccounts.length} account${user.bankAccounts.length > 1 ? 's' : ''}` : 'Add receiving account'}
-                    </p>
-                  </div>
-                </button>
-              </Link>
-              {user.verificationStatus !== 'approved' && (
-                <Link href="/verify/role-selection" className="block">
-                  <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
-                    <FileText className="w-5 h-5 text-amber-600" />
-                    <div>
-                      <p className="text-sm font-semibold text-amber-900">Get Verified</p>
-                      <p className="text-xs text-amber-700">Submit documents to start earning</p>
-                    </div>
-                  </button>
-                </Link>
-              )}
-            </div>
+                </div>
+              </>
+            )}
           </>
         )}
-
-        {/* Account Actions */}
-        <Link href="/contributor-requests" className="mb-6 block">
-          <button className="flex w-full items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-left transition hover:border-primary hover:bg-primary/5">
-            <Inbox className="h-5 w-5 text-primary" />
-            <div>
-              <p className="text-sm font-semibold text-slate-900">Contributor Requests</p>
-              <p className="text-xs text-slate-600">Review invitations to join videos</p>
-            </div>
-          </button>
-        </Link>
 
         <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">Account</h2>
         <div className="space-y-2">

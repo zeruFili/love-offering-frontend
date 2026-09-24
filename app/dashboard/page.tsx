@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useData } from '@/lib/data-context';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, DollarSign, Users, Heart, Upload, CreditCard, FileText, PlayCircle } from 'lucide-react';
+import { ArrowLeft, DollarSign, Users, Heart, Upload, CreditCard, FileText, PlayCircle, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -208,6 +208,16 @@ export default function DashboardPage() {
                       </button>
                     </Link>
                   )}
+
+                  <Link href="/contributor-requests" className="block">
+                    <button className="w-full flex items-center gap-3 p-4 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition text-left">
+                      <Inbox className="w-5 h-5 text-primary" />
+                      <div>
+                        <p className="font-semibold text-slate-900">Contributor Requests</p>
+                        <p className="text-xs text-slate-600">Review invitations to join videos</p>
+                      </div>
+                    </button>
+                  </Link>
                 </div>
 
                 {isDonor && donations.length > 0 ? (
