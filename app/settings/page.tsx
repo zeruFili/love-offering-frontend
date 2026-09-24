@@ -3,14 +3,22 @@
 import { useAuth } from '@/lib/auth-context';
 import { useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Settings as SettingsIcon, LogOut, Shield, FileText, CreditCard } from 'lucide-react';
+import { ArrowLeft, Settings as SettingsIcon, LogOut, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
+type EditableField = 'name' | 'phone' | 'email' | 'password';
+
 export default function SettingsPage() {
   const router = useRouter();
-  const { user, logout, isAuthLoaded } = useAuth();
+  const { user, logout, updateProfile, isAuthLoaded } = useAuth();
   const [mounted, setMounted] = useState(false);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [editingField, setEditingField] = useState<EditableField | null>(null);
+  const [saveMessage, setSaveMessage] = useState('');
 
   useEffect(() => {
     setMounted(true);
@@ -19,6 +27,13 @@ export default function SettingsPage() {
       router.push('/login');
     }
   }, [user, router, isAuthLoaded]);
+
+  useEffect(() => {
+    if (!user) return;
+    setName(user.name);
+    setPhone(user.phone ?? '');
+    setEmail(user.email);
+  }, [user]);
 
   if (!mounted || !user) return null;
 
@@ -29,7 +44,24 @@ export default function SettingsPage() {
     }
   };
 
-  const isCreator = ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user.role);
+  const handleEdit = (field: EditableField) => {
+    setEditingField(field);
+    setSaveMessage('');
+  };
+
+  const handleSave = (field: EditableField) => {
+    updateProfile({
+      name: name.trim(),
+      phone: phone.trim(),
+      email: email.trim(),
+      password: field === 'password' && password ? password : undefined,
+    });
+    if (field === 'password') setPassword('');
+    setEditingField(null);
+    setSaveMessage(`${field === 'password' ? 'Password' : field === 'phone' ? 'Phone number' : field.charAt(0).toUpperCase() + field.slice(1)} saved.`);
+  };
+
+  const isCreator = ['church', 'ministry', 'preacher', 'singer', 'musician', 'worship_group', 'choir_director'].includes(user.role);
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -50,20 +82,47 @@ export default function SettingsPage() {
         {/* Profile Section */}
         <div className="mb-6">
           <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">Profile</h2>
-          <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
+          <div className="bg-white rounded-xl border border-slate-200 p-4 space-y-4">
             <div>
-              <p className="text-xs text-slate-600">Name</p>
-              <p className="text-sm font-semibold text-slate-900">{user.name}</p>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <label htmlFor="name" className="block text-xs text-slate-600">Name</label>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleEdit('name')}>Edit</Button>
+              </div>
+              <input id="name" value={name} onChange={(event) => setName(event.target.value)} disabled={editingField !== 'name'} required className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-600" />
+              {editingField === 'name' && <Button type="button" className="mt-2" size="sm" onClick={() => handleSave('name')}>Save</Button>}
             </div>
             <div>
-              <p className="text-xs text-slate-600">Email</p>
-              <p className="text-sm font-semibold text-slate-900">{user.email}</p>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <label htmlFor="phone" className="block text-xs text-slate-600">Phone number</label>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleEdit('phone')}>Edit</Button>
+              </div>
+              <input id="phone" type="tel" value={phone} onChange={(event) => setPhone(event.target.value)} disabled={editingField !== 'phone'} required className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-600" />
+              {editingField === 'phone' && <Button type="button" className="mt-2" size="sm" onClick={() => handleSave('phone')}>Save</Button>}
+            </div>
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <label htmlFor="email" className="block text-xs text-slate-600">Email address</label>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleEdit('email')}>Edit</Button>
+              </div>
+              <input id="email" type="email" value={email} onChange={(event) => setEmail(event.target.value)} disabled={editingField !== 'email'} required className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-600" />
+              {editingField === 'email' && <Button type="button" className="mt-2" size="sm" onClick={() => handleSave('email')}>Save</Button>}
+            </div>
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-1">
+                <label htmlFor="password" className="block text-xs text-slate-600">New password</label>
+                <Button type="button" variant="outline" size="sm" onClick={() => handleEdit('password')}>Edit</Button>
+              </div>
+              <input id="password" type="password" value={password} onChange={(event) => setPassword(event.target.value)} disabled={editingField !== 'password'} placeholder="Enter a new password" minLength={6} className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm disabled:bg-slate-50 disabled:text-slate-600" />
+              {editingField === 'password' && <Button type="button" className="mt-2" size="sm" onClick={() => handleSave('password')}>Save</Button>}
             </div>
             <div>
               <p className="text-xs text-slate-600">Role</p>
               <p className="text-sm font-semibold text-slate-900">
                 {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
               </p>
+              <Link href="/verify/role-selection" className="mt-2 inline-block">
+                <Button type="button" variant="outline" size="sm">Change Role</Button>
+              </Link>
             </div>
             {isCreator && (
               <div>
@@ -83,64 +142,32 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+            <p aria-live="polite" className="text-xs text-green-700">{saveMessage}</p>
           </div>
         </div>
 
         {/* Creator Actions */}
         {isCreator && (
           <>
-            <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">Creator Tools</h2>
-            <div className="space-y-2 mb-6">
-              {user.verificationStatus === 'approved' && (
-                <>
-                  <Link href="/upload" className="block">
-                    <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition">
-                      <FileText className="w-5 h-5 text-primary" />
+            {user.verificationStatus !== 'approved' && (
+              <>
+                <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">Creator Tools</h2>
+                <div className="space-y-2 mb-6">
+                  <Link href="/verify/role-selection" className="block">
+                    <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
+                      <FileText className="w-5 h-5 text-amber-600" />
                       <div>
-                        <p className="text-sm font-semibold text-slate-900">Upload Video</p>
-                        <p className="text-xs text-slate-600">Share ministry content</p>
+                        <p className="text-sm font-semibold text-amber-900">Get Verified</p>
+                        <p className="text-xs text-amber-700">Submit documents to start earning</p>
                       </div>
                     </button>
                   </Link>
-                  <Link href="/contributors" className="block">
-                    <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition">
-                      <Shield className="w-5 h-5 text-primary" />
-                      <div>
-                        <p className="text-sm font-semibold text-slate-900">Manage Contributors</p>
-                        <p className="text-xs text-slate-600">Add co-creators to videos</p>
-                      </div>
-                    </button>
-                  </Link>
-                </>
-              )}
-              <Link href="/bank-accounts" className="block">
-                <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-white border border-slate-200 hover:border-primary hover:bg-primary/5 transition">
-                  <CreditCard className="w-5 h-5 text-primary" />
-                  <div>
-                    {/* FIXED: Added missing quote and closing tag */}
-                    <p className="text-sm font-semibold text-slate-900">Accounts</p>
-                    <p className="text-xs text-slate-600">
-                      {user.bankAccounts?.length > 0 ? `${user.bankAccounts.length} account${user.bankAccounts.length > 1 ? 's' : ''}` : 'Add receiving account'}
-                    </p>
-                  </div>
-                </button>
-              </Link>
-              {user.verificationStatus !== 'approved' && (
-                <Link href="/verify/role-selection" className="block">
-                  <button className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-amber-50 border border-amber-200">
-                    <FileText className="w-5 h-5 text-amber-600" />
-                    <div>
-                      <p className="text-sm font-semibold text-amber-900">Get Verified</p>
-                      <p className="text-xs text-amber-700">Submit documents to start earning</p>
-                    </div>
-                  </button>
-                </Link>
-              )}
-            </div>
+                </div>
+              </>
+            )}
           </>
         )}
 
-        {/* Account Actions */}
         <h2 className="text-xs font-semibold text-slate-600 uppercase tracking-wide mb-3">Account</h2>
         <div className="space-y-2">
           <button

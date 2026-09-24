@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useData } from '@/lib/data-context';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Mail, LogOut, Settings, BarChart3, Heart, Shield, Gift, Menu, Search, Compass, Radio, History, User, Upload, FileText } from 'lucide-react';
+import { Mail, LogOut, Settings, BarChart3, Heart, Shield, Gift, Menu, Search, History, User, Upload, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import Link from 'next/link';
@@ -80,11 +80,9 @@ export default function Home() {
 
     return filteredBySearch.filter((video) => video.creatorRole === roleByCategory[activeCategory]);
   })();
-  const featuredVideoId = filteredVideos[0]?.id ?? videos[0]?.id;
-
   if (!mounted) return null;
   if (!user) return null;
-  const canManageCreatorVideos = user.role !== 'donor' && ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user.role);
+  const canManageCreatorVideos = user.role !== 'donor' && ['church', 'ministry', 'preacher', 'singer', 'musician', 'worship_group', 'choir_director'].includes(user.role);
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -253,32 +251,18 @@ export default function Home() {
                 <BarChart3 className="w-5 h-5" />
                 <span>Dashboard</span>
               </Link>
-              <Link href="/contributors" className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition">
-                <Compass className="w-5 h-5" />
-                <span>Explore</span>
-              </Link>
-              <Link href={featuredVideoId ? `/video/${featuredVideoId}` : '/'} className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition">
-                <Radio className="w-5 h-5" />
-                <span>Live</span>
-              </Link>
               <Link href="/settings" className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition">
                 <Settings className="w-5 h-5" />
                 <span>Settings</span>
               </Link>
               {canManageCreatorVideos && (
-                <>
-                  <button
-                    onClick={() => setShowMyVideos((previous) => !previous)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition"
-                  >
-                    <History className="w-5 h-5" />
-                    <span>{showMyVideos ? 'All Videos' : 'My Videos'}</span>
-                  </button>
-                  <Link href="/upload" className="flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition">
-                    <Upload className="w-5 h-5" />
-                    <span>Upload Video</span>
-                  </Link>
-                </>
+                <button
+                  onClick={() => setShowMyVideos((previous) => !previous)}
+                  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl text-slate-700 hover:bg-slate-100 transition"
+                >
+                  <History className="w-5 h-5" />
+                  <span>{showMyVideos ? 'All Videos' : 'My Videos'}</span>
+                </button>
               )}
               {user.role === 'donor' && (
                 <Link href="/verify/role-selection" className="flex items-center gap-3 px-3 py-2 rounded-xl text-amber-700 bg-amber-50 hover:bg-amber-100 transition">
@@ -290,6 +274,17 @@ export default function Home() {
           </aside>
 
           <div>
+            {canManageCreatorVideos && showMyVideos && (
+              <div className="flex justify-end pb-4">
+                <Link href="/upload">
+                  <button className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-primary/90">
+                    <Upload className="w-4 h-4" />
+                    <span>Upload Video</span>
+                  </button>
+                </Link>
+              </div>
+            )}
+
             <div className="flex gap-2 overflow-x-auto pb-4">
               {desktopCategories.map((category) => (
                 <button

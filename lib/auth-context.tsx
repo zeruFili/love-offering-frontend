@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-export type UserRole = 'admin' | 'church' | 'ministry' | 'preacher' | 'singer' | 'worship_group' | 'donor';
+export type UserRole = 'admin' | 'church' | 'ministry' | 'preacher' | 'singer' | 'musician' | 'worship_group' | 'choir_director' | 'donor';
 export type VerificationStatus = 'pending' | 'approved' | 'rejected' | 'under_review';
 export type AccountStatus = 'active' | 'disabled';
 
@@ -18,6 +18,7 @@ export interface BankAccount {
 export interface User {
   id: string;
   email: string;
+  phone?: string;
   name: string;
   role: UserRole;
   verificationStatus: VerificationStatus;
@@ -35,6 +36,7 @@ interface AuthContextType {
   isAuthLoaded: boolean;
   login: (email: string, password: string) => boolean;
   logout: () => void;
+  updateProfile: (updates: { name: string; phone: string; email: string; password?: string }) => void;
   updateUser: (updates: Partial<User>) => void;
   addBankAccount: (account: Omit<BankAccount, 'id'>) => void;
   updateBankAccount: (id: string, updates: Partial<BankAccount>) => void;
@@ -169,6 +171,19 @@ const MOCK_USERS: Record<string, { password: string; user: User }> = {
   },
 };
 
+const ADDITIONAL_MOCK_USERS: Record<string, { password: string; user: User }> = {
+  'ephrem@example.com': { password: 'ephrem123', user: { id: '7', email: 'ephrem@example.com', name: 'Ephrem Alemu', role: 'singer', verificationStatus: 'approved', accountStatus: 'active', totalEarnings: 2450, supporterCount: 31, bankAccounts: [{ id: 'bank-7', bankName: 'Demo Music Bank', accountNumber: '****7001', accountHolderName: 'Ephrem Alemu', isDefault: true, verificationStatus: 'verified' }] } },
+  'kalkidan@example.com': { password: 'kalkidan123', user: { id: '8', email: 'kalkidan@example.com', name: 'Kalkidan Lilly Tilahun', role: 'singer', verificationStatus: 'approved', accountStatus: 'active', totalEarnings: 1980, supporterCount: 26, bankAccounts: [{ id: 'bank-8', bankName: 'Demo Music Bank', accountNumber: '****8001', accountHolderName: 'Kalkidan Lilly Tilahun', isDefault: true, verificationStatus: 'verified' }] } },
+  'minase@example.com': { password: 'minase123', user: { id: '9', email: 'minase@example.com', name: 'Minase Firdawek', role: 'musician', verificationStatus: 'approved', accountStatus: 'active', totalEarnings: 1760, supporterCount: 22, bankAccounts: [{ id: 'bank-9', bankName: 'Demo Music Bank', accountNumber: '****9001', accountHolderName: 'Minase Firdawek', isDefault: true, verificationStatus: 'verified' }] } },
+  'yosef@example.com': { password: 'yosef123', user: { id: '10', email: 'yosef@example.com', name: 'Yosef Kassa', role: 'singer', verificationStatus: 'approved', accountStatus: 'active', totalEarnings: 1540, supporterCount: 20, bankAccounts: [{ id: 'bank-10', bankName: 'Demo Music Bank', accountNumber: '****1001', accountHolderName: 'Yosef Kassa', isDefault: true, verificationStatus: 'verified' }] } },
+  'tesfaye@example.com': { password: 'tesfaye123', user: { id: '11', email: 'tesfaye@example.com', name: 'Tesfaye Gabisso', role: 'singer', verificationStatus: 'approved', accountStatus: 'active', totalEarnings: 1420, supporterCount: 18, bankAccounts: [{ id: 'bank-11', bankName: 'Demo Music Bank', accountNumber: '****1101', accountHolderName: 'Tesfaye Gabisso', isDefault: true, verificationStatus: 'verified' }] } },
+  'sofia@example.com': { password: 'sofia123', user: { id: '12', email: 'sofia@example.com', name: 'Sofia Shibabaw', role: 'singer', verificationStatus: 'approved', accountStatus: 'active', totalEarnings: 2210, supporterCount: 29, bankAccounts: [{ id: 'bank-12', bankName: 'Demo Music Bank', accountNumber: '****1201', accountHolderName: 'Sofia Shibabaw', isDefault: true, verificationStatus: 'verified' }] } },
+  'samuel@example.com': { password: 'samuel123', user: { id: '13', email: 'samuel@example.com', name: 'Samuel Negussie', role: 'singer', verificationStatus: 'approved', accountStatus: 'active', totalEarnings: 1320, supporterCount: 16, bankAccounts: [{ id: 'bank-13', bankName: 'Demo Music Bank', accountNumber: '****1301', accountHolderName: 'Samuel Negussie', isDefault: true, verificationStatus: 'verified' }] } },
+  'bereket@example.com': { password: 'bereket123', user: { id: '14', email: 'bereket@example.com', name: 'Bereket Tesfaye', role: 'singer', verificationStatus: 'approved', accountStatus: 'active', totalEarnings: 1670, supporterCount: 21, bankAccounts: [{ id: 'bank-14', bankName: 'Demo Music Bank', accountNumber: '****1401', accountHolderName: 'Bereket Tesfaye', isDefault: true, verificationStatus: 'verified' }] } },
+  'azeb@example.com': { password: 'azeb123', user: { id: '15', email: 'azeb@example.com', name: 'Azeb Hailu', role: 'singer', verificationStatus: 'approved', accountStatus: 'active', totalEarnings: 1890, supporterCount: 25, bankAccounts: [{ id: 'bank-15', bankName: 'Demo Music Bank', accountNumber: '****1501', accountHolderName: 'Azeb Hailu', isDefault: true, verificationStatus: 'verified' }] } },
+  'fenan@example.com': { password: 'fenan123', user: { id: '16', email: 'fenan@example.com', name: 'Fenan Befkadu', role: 'singer', verificationStatus: 'approved', accountStatus: 'active', totalEarnings: 2040, supporterCount: 27, bankAccounts: [{ id: 'bank-16', bankName: 'Demo Music Bank', accountNumber: '****1601', accountHolderName: 'Fenan Befkadu', isDefault: true, verificationStatus: 'verified' }] } },
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthLoaded, setIsAuthLoaded] = useState(false);
@@ -182,9 +197,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = (email: string, password: string): boolean => {
-    const userRecord = MOCK_USERS[email];
-    if (userRecord && userRecord.password === password) {
-      const userData = { ...userRecord.user };
+    const storedCredentials = localStorage.getItem('loveoffering_credentials');
+    const credentials = storedCredentials ? JSON.parse(storedCredentials) as { email: string; password: string } : null;
+    const userRecord = MOCK_USERS[email] ?? ADDITIONAL_MOCK_USERS[email];
+    const isStoredUser = credentials?.email === email && credentials.password === password;
+    if ((userRecord && userRecord.password === password) || isStoredUser) {
+      const storedUser = localStorage.getItem('loveoffering_user');
+      const userData = storedUser && credentials?.email === email
+        ? JSON.parse(storedUser) as User
+        : { ...userRecord!.user };
       setUser(userData);
       localStorage.setItem('loveoffering_user', JSON.stringify(userData));
       return true;
@@ -195,6 +216,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('loveoffering_user');
+  };
+
+  const updateProfile = (updates: { name: string; phone: string; email: string; password?: string }) => {
+    if (!user) return;
+
+    const updated = { ...user, name: updates.name, phone: updates.phone, email: updates.email };
+    setUser(updated);
+    localStorage.setItem('loveoffering_user', JSON.stringify(updated));
+
+    const storedCredentials = localStorage.getItem('loveoffering_credentials');
+    const currentCredentials = storedCredentials
+      ? JSON.parse(storedCredentials) as { email: string; password: string }
+      : { email: user.email, password: '' };
+    localStorage.setItem('loveoffering_credentials', JSON.stringify({
+      email: updates.email,
+      password: updates.password || currentCredentials.password,
+    }));
   };
 
   const updateUser = (updates: Partial<User>) => {
@@ -234,7 +272,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, isAuthLoaded, login, logout, updateUser, addBankAccount, updateBankAccount }}>
+    <AuthContext.Provider value={{ user, isLoggedIn: !!user, isAuthLoaded, login, logout, updateProfile, updateUser, addBankAccount, updateBankAccount }}>
       {children}
     </AuthContext.Provider>
   );

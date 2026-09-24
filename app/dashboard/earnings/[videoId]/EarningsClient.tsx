@@ -10,7 +10,7 @@ import { ArrowLeft, Heart, MessageCircle, DollarSign, Users, Send, Reply as Repl
 export default function EarningsClient({ videoId }: { videoId: string }) {
   const router = useRouter();
   const { user, isAuthLoaded } = useAuth();
-  const { videos, comments, addReply } = useData();
+  const { videos, comments, addReply, getVideoContributors } = useData();
   const [mounted, setMounted] = useState(false);
   const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
   const [openReplyComposer, setOpenReplyComposer] = useState<Record<string, boolean>>({});
@@ -27,6 +27,14 @@ export default function EarningsClient({ videoId }: { videoId: string }) {
 
   const matchedVideos = useMemo(() => {
     if (!user) return [];
+
+    if (user.role === 'singer') {
+      return videos.filter(
+        (video) =>
+          video.id === '686d5ba778f844ec9012011e' ||
+          video.id === 'demo-video-samuel-endegena'
+      );
+    }
 
     const exactMatches = videos.filter(
       (video) => normalizeText(video.creatorName) === normalizeText(user.name)
@@ -60,6 +68,7 @@ export default function EarningsClient({ videoId }: { videoId: string }) {
 
   const totalReceived = videoComments.reduce((sum, comment) => sum + comment.amount, 0);
   const supporterCount = new Set(videoComments.map((comment) => comment.authorName)).size;
+  const videoContributors = getVideoContributors(video.id);
 
   const handleSendReply = (commentId: string, donationId: string) => {
     const draft = replyDrafts[commentId]?.trim();
@@ -121,6 +130,42 @@ export default function EarningsClient({ videoId }: { videoId: string }) {
             <p className="text-2xl font-bold">{supporterCount}</p>
           </div>
         </div>
+
+        {videoContributors.length > 0 && (
+          <section className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <div>
+                <h3 className="font-semibold text-slate-900">Contributor Earnings</h3>
+                <p className="mt-1 text-xs text-slate-500">Demo distribution for this video</p>
+              </div>
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div className="space-y-3">
+              {videoContributors.map((contributor) => (
+                <div key={contributor.id} className="flex items-center justify-between gap-3 rounded-lg bg-slate-50 p-3">
+                  <div className="flex min-w-0 items-center gap-3">
+                    {contributor.profilePhoto ? (
+                      <img
+                        src={contributor.profilePhoto}
+                        alt={contributor.displayName}
+                        className="h-10 w-10 rounded-full border border-slate-200 object-cover"
+                      />
+                    ) : (
+                      <div className="h-10 w-10 rounded-full bg-primary/10" />
+                    )}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-slate-900">{contributor.displayName}</p>
+                      <p className="text-xs text-slate-600">{contributor.role}</p>
+                    </div>
+                  </div>
+                  <p className="shrink-0 text-sm font-bold text-primary">
+                    ETB {(contributor.earnings ?? 0).toLocaleString()}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         <div className="flex items-center gap-2 text-slate-900 font-semibold">
           <MessageCircle className="w-5 h-5 text-primary" />

@@ -27,19 +27,25 @@ export default function DonateClient({ videoId }: { videoId: string }) {
   const { getVideoById, addDonation } = useData();
 
   const video = getVideoById(videoId);
+  const isHallelujah = videoId === '686d5ba778f844ec9012011e';
+  const hallelujahContributors = [
+    { id: '686d5b5678f844ec90120115', name: 'Aster Abebe', role: 'Lead Singer', primary: true },
+    { id: '7', name: 'Ephrem Alemu', role: 'Lead Vocalist', primary: false },
+    { id: '13', name: 'Samuel Negussie', role: 'Bass Guitar', primary: false },
+  ];
   const [amount, setAmount] = useState('');
   const [comment, setComment] = useState('');
-  const [selectedContributors, setSelectedContributors] = useState<Record<string, number>>({});
+  const [contributorPercentages, setContributorPercentages] = useState<Record<string, number>>({
+    '686d5b5678f844ec90120115': 100,
+    '7': 0,
+    '13': 0,
+  });
 
   useEffect(() => {
-    if (!video || !user) {
-      return;
+    if (video && !isHallelujah) {
+      setContributorPercentages({ [video.creatorId]: 100 });
     }
-
-    const parsedAmount = Number.parseFloat(amount);
-    const safeAmount = Number.isFinite(parsedAmount) ? parsedAmount : 0;
-    setSelectedContributors({ [video.creatorId]: safeAmount });
-  }, [amount, user, video]);
+  }, [isHallelujah, video]);
 
   if (!video || !user) {
     return (
@@ -55,6 +61,15 @@ export default function DonateClient({ videoId }: { videoId: string }) {
       alert('Minimum gift amount is $100');
       return;
     }
+
+    const selectedContributors = isHallelujah
+      ? Object.fromEntries(
+          hallelujahContributors.map((contributor) => [
+            contributor.id,
+            parsedAmount * ((contributorPercentages[contributor.id] ?? 0) / 100),
+          ])
+        )
+      : { [video.creatorId]: parsedAmount };
 
     const now = new Date();
     const receiptReference = `RC-${now.getTime().toString(36).toUpperCase()}`;
@@ -89,6 +104,21 @@ export default function DonateClient({ videoId }: { videoId: string }) {
     router.push(`/receipt?receiptId=${receiptReference}`);
     setAmount('');
     setComment('');
+  };
+
+  const totalPercentage = isHallelujah
+    ? hallelujahContributors.reduce(
+        (total, contributor) => total + (contributorPercentages[contributor.id] ?? 0),
+        0
+      )
+    : 100;
+  const remainingPercentage = Math.max(0, 100 - totalPercentage);
+  const parsedAmount = Number.parseFloat(amount);
+
+  const updateContributorPercentage = (contributorId: string, nextValue: number) => {
+    const otherPercentage = totalPercentage - (contributorPercentages[contributorId] ?? 0);
+    const cappedValue = Math.min(nextValue, Math.max(0, 100 - otherPercentage));
+    setContributorPercentages((previous) => ({ ...previous, [contributorId]: cappedValue }));
   };
 
   return (
@@ -162,27 +192,59 @@ export default function DonateClient({ videoId }: { videoId: string }) {
 
         <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6">
           <label className="block text-sm font-semibold text-slate-900 mb-3">Support</label>
-          <p className="text-xs text-slate-600 mb-3">
-            Your gift will go directly to this ministry creator:
-          </p>
-
-          <div className="space-y-2">
-            {Object.entries(selectedContributors).map(([contributorId, split]) => (
-              <div key={contributorId} className="flex items-center justify-between p-3 bg-primary/5 rounded-lg border border-primary/20">
-                <div>
-                  <p className="text-sm font-semibold text-slate-900">
-                    {contributorId === video.creatorId ? video.creatorName : 'Contributor'}
-                  </p>
-                  {amount && (
-                    <p className="text-xs text-slate-600">
-                      ${split.toFixed(2)} ({((split / parseFloat(amount)) * 100).toFixed(0)}%)
-                    </p>
-                  )}
-                </div>
-                <span className="text-xs font-medium text-primary">Primary Recipient</span>
+          {isHallelujah ? (
+            <>
+              <div className="mb-5 rounded-lg border border-primary/30 bg-primary/5 p-4 text-center">
+                <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Total Percentage</p>
+                <p className="mt-1 text-3xl font-bold text-primary">{totalPercentage}%</p>
+                <p className="mt-1 text-xs text-slate-600">{remainingPercentage}% remaining to allocate</p>
               </div>
-            ))}
-          </div>
+              <div className="space-y-5">
+                {hallelujahContributors.map((contributor) => {
+                  const percentage = contributorPercentages[contributor.id] ?? 0;
+                  const giftShare = Number.isFinite(parsedAmount) ? parsedAmount * (percentage / 100) : 0;
+
+                  return (
+                    <div key={contributor.id} className={`rounded-lg border p-3 ${
+                      contributor.primary ? 'border-primary bg-primary/5' : 'border-slate-200 bg-white'
+                    }`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div>
+                          <p className={`text-sm font-semibold ${contributor.primary ? 'text-primary' : 'text-slate-900'}`}>
+                            {contributor.name}
+                          </p>
+                          <p className="text-xs text-slate-600">Role: {contributor.role}</p>
+                        </div>
+                        <span className="text-sm font-bold text-slate-900">{percentage}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={percentage}
+                        onChange={(event) => updateContributorPercentage(contributor.id, Number(event.target.value))}
+                        className="mt-3 w-full accent-primary"
+                        aria-label={`${contributor.name} allocation percentage`}
+                      />
+                      <div className="mt-1 flex justify-between text-xs text-slate-500">
+                        <span>0%</span>
+                        <span>{Number.isFinite(parsedAmount) ? `$${giftShare.toFixed(2)}` : '$0.00'}</span>
+                        <span>100%</span>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 p-3">
+              <div>
+                <p className="text-sm font-semibold text-slate-900">{video.creatorName}</p>
+                {amount && <p className="text-xs text-slate-600">${Number.parseFloat(amount).toFixed(2)} (100%)</p>}
+              </div>
+              <span className="text-xs font-medium text-primary">Primary Recipient</span>
+            </div>
+          )}
         </div>
 
         <div className="bg-white rounded-xl border border-slate-200 p-4 mb-6">

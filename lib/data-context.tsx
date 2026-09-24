@@ -3,6 +3,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import {
   MOCK_VIDEOS,
+  DEMO_MUSIC_VIDEOS,
+  MOCK_CONTRIBUTORS,
+  MOCK_CONTRIBUTOR_REQUESTS,
   MOCK_DONATIONS,
   MOCK_COMMENTS,
   MOCK_VERIFICATION_REQUESTS,
@@ -19,6 +22,7 @@ import {
 
 interface DataContextType {
   videos: Video[];
+  isDataLoaded: boolean;
   donations: Donation[];
   comments: Comment[];
   verificationRequests: VerificationRequest[];
@@ -55,6 +59,8 @@ interface DataContextType {
   getContributorRequestsForUser: (userId: string) => ContributorRequest[];
   acceptContributorRequest: (requestId: string) => void;
   rejectContributorRequest: (requestId: string, note?: string) => void;
+  updateContributorRequestRole: (requestId: string, role: string) => void;
+  deleteContributorRequest: (requestId: string) => void;
   updateContributorRole: (contributorId: string, role: string) => void;
   removeContributor: (contributorId: string) => void;
   getContributionsForUser: (userId: string) => Contributor[];
@@ -68,6 +74,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 
 export function DataProvider({ children }: { children: React.ReactNode }) {
   const [videos, setVideos] = useState<Video[]>([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [comments, setComments] = useState<Comment[]>([]);
   const [verificationRequests, setVerificationRequests] = useState<VerificationRequest[]>([]);
@@ -77,11 +84,14 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Load initial mock data
-    setVideos(MOCK_VIDEOS);
+    setVideos([...MOCK_VIDEOS, ...DEMO_MUSIC_VIDEOS]);
     setDonations(MOCK_DONATIONS);
     setComments(MOCK_COMMENTS);
     setVerificationRequests(MOCK_VERIFICATION_REQUESTS);
     setAdminLogs(MOCK_ADMIN_LOGS);
+    setContributors(MOCK_CONTRIBUTORS);
+    setContributorRequests(MOCK_CONTRIBUTOR_REQUESTS);
+    setIsDataLoaded(true);
   }, []);
 
   const getVideoById = (id: string) => videos.find(v => v.id === id);
@@ -216,6 +226,16 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const updateContributorRequestRole = (requestId: string, role: string) => {
+    setContributorRequests((previous) =>
+      previous.map((item) => (item.id === requestId ? { ...item, role } : item))
+    );
+  };
+
+  const deleteContributorRequest = (requestId: string) => {
+    setContributorRequests((previous) => previous.filter((item) => item.id !== requestId));
+  };
+
   const updateContributorRole = (contributorId: string, role: string) => {
     setContributors((previous) =>
       previous.map((item) => (item.id === contributorId ? { ...item, role } : item))
@@ -240,6 +260,7 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
     <DataContext.Provider
       value={{
         videos,
+        isDataLoaded,
         donations,
         comments,
         verificationRequests,
@@ -266,6 +287,8 @@ export function DataProvider({ children }: { children: React.ReactNode }) {
         getContributorRequestsForUser,
         acceptContributorRequest,
         rejectContributorRequest,
+        updateContributorRequestRole,
+        deleteContributorRequest,
         updateContributorRole,
         removeContributor,
         getContributionsForUser,

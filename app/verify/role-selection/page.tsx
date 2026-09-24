@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { ArrowLeft, FileCheck2 } from 'lucide-react';
+import { useAuth } from '@/lib/auth-context';
 
 const ROLE_OPTIONS = [
   { id: 'singer', label: 'Singer', description: 'Solo worship singer or vocalist' },
@@ -15,7 +16,10 @@ const ROLE_OPTIONS = [
 
 export default function RoleSelectionPage() {
   const router = useRouter();
+  const { user } = useAuth();
   const [selectedRole, setSelectedRole] = useState<string>('');
+
+  const currentRole = ROLE_OPTIONS.find((role) => role.id === user?.role)?.label ?? user?.role;
 
   const handleSelectRole = (roleId: string) => {
     setSelectedRole(roleId);
@@ -50,10 +54,16 @@ export default function RoleSelectionPage() {
             
               </div>
             </div>
+            {currentRole && (
+              <div className="mt-4 rounded-xl bg-slate-50 px-4 py-3">
+                <p className="text-xs text-slate-600">Your current role</p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">{currentRole}</p>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {ROLE_OPTIONS.map((role) => (
+            {ROLE_OPTIONS.filter((role) => role.id !== user?.role).map((role) => (
               <button
                 key={role.id}
                 type="button"

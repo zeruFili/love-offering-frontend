@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useData } from '@/lib/data-context';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Users, Plus, AlertCircle, CheckCircle, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, Plus, AlertCircle, CheckCircle, Trash2, Pencil, Save } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 
@@ -54,6 +54,76 @@ const PARTICIPANTS = [
     profilePhoto: 'https://ui-avatars.com/api/?name=Regular+Donor&background=fff3cd&color=7a5d00',
     bankAccountLinked: false,
   },
+  {
+    id: '7',
+    username: 'ephrem',
+    displayName: 'Ephrem Alemu',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Ephrem+Alemu&background=e2f6f6&color=1b5e5e',
+    bankAccountLinked: true,
+  },
+  {
+    id: '8',
+    username: 'kalkidan',
+    displayName: 'Kalkidan Lilly Tilahun',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Kalkidan+Lilly+Tilahun&background=e2f6f6&color=1b5e5e',
+    bankAccountLinked: true,
+  },
+  {
+    id: '9',
+    username: 'minase',
+    displayName: 'Minase Firdawek',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Minase+Firdawek&background=e2f6f6&color=1b5e5e',
+    bankAccountLinked: true,
+  },
+  {
+    id: '10',
+    username: 'yosef',
+    displayName: 'Yosef Kassa',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Yosef+Kassa&background=e2f6f6&color=1b5e5e',
+    bankAccountLinked: true,
+  },
+  {
+    id: '11',
+    username: 'tesfaye',
+    displayName: 'Tesfaye Gabisso',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Tesfaye+Gabisso&background=e2f6f6&color=1b5e5e',
+    bankAccountLinked: true,
+  },
+  {
+    id: '12',
+    username: 'sofia',
+    displayName: 'Sofia Shibabaw',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Sofia+Shibabaw&background=e2f6f6&color=1b5e5e',
+    bankAccountLinked: true,
+  },
+  {
+    id: '13',
+    username: 'samuel',
+    displayName: 'Samuel Negussie',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Samuel+Negussie&background=e2f6f6&color=1b5e5e',
+    bankAccountLinked: true,
+  },
+  {
+    id: '14',
+    username: 'bereket',
+    displayName: 'Bereket Tesfaye',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Bereket+Tesfaye&background=e2f6f6&color=1b5e5e',
+    bankAccountLinked: true,
+  },
+  {
+    id: '15',
+    username: 'azeb',
+    displayName: 'Azeb Hailu',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Azeb+Hailu&background=e2f6f6&color=1b5e5e',
+    bankAccountLinked: true,
+  },
+  {
+    id: '16',
+    username: 'fenan',
+    displayName: 'Fenan Befkadu',
+    profilePhoto: 'https://ui-avatars.com/api/?name=Fenan+Befkadu&background=e2f6f6&color=1b5e5e',
+    bankAccountLinked: true,
+  },
 ];
 
 export default function ContributorsClient() {
@@ -61,10 +131,13 @@ export default function ContributorsClient() {
   const searchParams = useSearchParams();
   const { user, isAuthLoaded } = useAuth();
   const {
+    videos,
     getVideosByCreator,
     createContributorRequest,
     getContributorRequestsByCreator,
     getVideoContributors,
+    updateContributorRequestRole,
+    deleteContributorRequest,
     updateContributorRole,
     removeContributor,
   } = useData();
@@ -73,11 +146,29 @@ export default function ContributorsClient() {
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
   const [searchUsername, setSearchUsername] = useState('');
   const [roleByUserId, setRoleByUserId] = useState<Record<string, string>>({});
+  const [pendingRoleByRequestId, setPendingRoleByRequestId] = useState<Record<string, string>>({});
+  const [editingRequestId, setEditingRequestId] = useState<string | null>(null);
+  const [editingContributorId, setEditingContributorId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
   const [isVideoScoped, setIsVideoScoped] = useState(false);
 
-  const isCreator = ['church', 'ministry', 'preacher', 'singer', 'worship_group'].includes(user?.role ?? '');
-  const creatorVideos = user ? getVideosByCreator(user.id) : [];
+  const isCreator = ['church', 'ministry', 'preacher', 'singer', 'musician', 'worship_group', 'choir_director'].includes(user?.role ?? '');
+  const normalizeText = (value: string) => value.trim().toLowerCase();
+  const creatorVideos = user
+    ? (() => {
+        const exactVideos = getVideosByCreator(user.id);
+        if (exactVideos.length > 0) return exactVideos;
+
+        const namedVideos = videos.filter(
+          (video) => normalizeText(video.creatorName) === normalizeText(user.name)
+        );
+        if (namedVideos.length > 0) return namedVideos;
+
+        return videos.filter(
+          (video) => normalizeText(video.creatorRole) === normalizeText(user.role)
+        );
+      })()
+    : [];
   const videoIdFromQuery = searchParams.get('videoId');
   const scopedVideos = videoIdFromQuery
     ? creatorVideos.filter((video) => video.id === videoIdFromQuery)
@@ -349,10 +440,85 @@ export default function ContributorsClient() {
                     .filter((request) => request.status === 'pending')
                     .map((request) => (
                       <div key={request.id} className="p-3 rounded-lg border border-amber-200 bg-amber-50">
-                        <p className="font-semibold text-slate-900">{request.contributorDisplayName}</p>
-                        <p className="text-xs text-slate-600 mt-1">@{request.contributorUsername}</p>
-                        <p className="text-xs text-slate-600 mt-1">Role: {request.role}</p>
-                        <p className="text-xs text-amber-700 mt-2 font-medium">Awaiting acceptance</p>
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0 flex-1">
+                            <p className="font-semibold text-slate-900">{request.contributorDisplayName}</p>
+                            <p className="text-xs text-slate-600 mt-1">@{request.contributorUsername}</p>
+                            {editingRequestId === request.id ? (
+                              <Input
+                                list="contributor-role-suggestions"
+                                value={pendingRoleByRequestId[request.id] ?? request.role}
+                                onChange={(event) =>
+                                  setPendingRoleByRequestId((previous) => ({
+                                    ...previous,
+                                    [request.id]: event.target.value,
+                                  }))
+                                }
+                                className="mt-2 h-9 bg-white"
+                              />
+                            ) : (
+                              <p className="text-xs text-slate-600 mt-1">Role: {request.role}</p>
+                            )}
+                            <p className="text-xs text-amber-700 mt-2 font-medium">Awaiting acceptance</p>
+                          </div>
+                          {editingRequestId === request.id ? (
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  const role = (pendingRoleByRequestId[request.id] ?? request.role).trim();
+                                  if (!role) {
+                                    setMessage('error-no-role');
+                                    return;
+                                  }
+                                  updateContributorRequestRole(request.id, role);
+                                  setEditingRequestId(null);
+                                }}
+                                className="bg-white text-primary"
+                              >
+                                <Save className="h-4 w-4" />
+                                Save
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => deleteContributorRequest(request.id)}
+                                className="border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700"
+                                aria-label={`Delete request for ${request.contributorDisplayName}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <div className="flex gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setPendingRoleByRequestId((previous) => ({
+                                    ...previous,
+                                    [request.id]: request.role,
+                                  }));
+                                  setEditingRequestId(request.id);
+                                }}
+                                className="bg-white text-slate-700"
+                              >
+                                <Pencil className="h-4 w-4" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => deleteContributorRequest(request.id)}
+                                className="border-red-200 bg-white text-red-600 hover:bg-red-50 hover:text-red-700"
+                                aria-label={`Delete request for ${request.contributorDisplayName}`}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                 </div>
@@ -373,21 +539,67 @@ export default function ContributorsClient() {
                         <div className="flex-1">
                           <p className="font-semibold text-slate-900">{contributor.displayName}</p>
                           <p className="text-xs text-slate-600 mt-1">@{contributor.userName}</p>
-                          <Input
-                            list="contributor-role-suggestions"
-                            value={contributor.role}
-                            onChange={(event) => updateContributorRole(contributor.id, event.target.value)}
-                            className="mt-2 h-9"
-                          />
+                          {editingContributorId === contributor.id ? (
+                            <Input
+                              list="contributor-role-suggestions"
+                              defaultValue={contributor.role}
+                              onChange={(event) =>
+                                setRoleByUserId((previous) => ({
+                                  ...previous,
+                                  [contributor.id]: event.target.value,
+                                }))
+                              }
+                              className="mt-2 h-9"
+                            />
+                          ) : (
+                            <p className="text-xs text-slate-600 mt-1">Role: {contributor.role}</p>
+                          )}
                         </div>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeContributor(contributor.id)}
-                          className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <div className="flex shrink-0 gap-2">
+                          {editingContributorId === contributor.id ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                const role = (roleByUserId[contributor.id] ?? contributor.role).trim();
+                                if (!role) {
+                                  setMessage('error-no-role');
+                                  return;
+                                }
+                                updateContributorRole(contributor.id, role);
+                                setEditingContributorId(null);
+                              }}
+                              className="text-primary"
+                            >
+                              <Save className="h-4 w-4" />
+                              Save
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setRoleByUserId((previous) => ({
+                                  ...previous,
+                                  [contributor.id]: contributor.role,
+                                }));
+                                setEditingContributorId(contributor.id);
+                              }}
+                            >
+                              <Pencil className="h-4 w-4" />
+                              Edit
+                            </Button>
+                          )}
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => removeContributor(contributor.id)}
+                            className="border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700"
+                            aria-label={`Remove ${contributor.displayName}`}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   ))}
